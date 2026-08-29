@@ -2038,17 +2038,17 @@ body {
 
 .manuscript-reading-sheet {
   width: 100%;
-  max-width: 660px;
-  background: var(--bg-surface-elevated);
-  border: 1px solid var(--border-gold);
-  border-radius: var(--radius-md);
-  padding: 3.5rem 3.8rem;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.04);
+  max-width: 680px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 1.5rem 1rem 5rem;
+  box-shadow: none;
 }
 
 @media (max-width: 640px) {
   .manuscript-reading-sheet {
-    padding: 2rem 1.5rem;
+    padding: 1rem 0.5rem 4rem;
   }
 }
 

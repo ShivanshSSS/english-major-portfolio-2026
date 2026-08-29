@@ -1237,7 +1237,7 @@ export const INITIAL_DATA = ${JSON.stringify(data, null, 2)};
                           value={bookForm.status} 
                           onChange={e => setBookForm({...bookForm, status: e.target.value})}
                         >
-                          <option value="Finished">Finished</option>
+                          <option value="Favourites">Favourites</option>
                           <option value="Currently Reading">Currently Reading</option>
                         </select>
                       </div>
