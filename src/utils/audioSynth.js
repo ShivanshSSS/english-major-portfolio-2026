@@ -1,4 +1,4 @@
-// Pure Web Audio API Sound Generator for Ambient Literary Ambiance & Typewriter FX
+// Enhanced Web Audio API Synthesizer for Victorian Literary Experience
 let audioCtx = null;
 let ambientNodes = [];
 
@@ -23,22 +23,91 @@ export function playTypewriterSound() {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
-    // Randomize pitch slightly for click authentic feel
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(400 + Math.random() * 300, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.04);
+    osc.frequency.setValueAtTime(450 + Math.random() * 250, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(70, ctx.currentTime + 0.045);
 
-    gain.gain.setValueAtTime(0.12, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.045);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
 
     osc.start();
-    osc.stop(ctx.currentTime + 0.04);
-  } catch (e) {
-    // Ignore audio autoplay restrictions
-  }
+    osc.stop(ctx.currentTime + 0.045);
+  } catch (e) {}
+}
+
+export function playTypewriterBell() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(2093, ctx.currentTime); // High C7 bell chime
+    osc.frequency.exponentialRampToValueAtTime(2000, ctx.currentTime + 0.8);
+
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.8);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.8);
+  } catch (e) {}
+}
+
+export function playWaxSealStampSound() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    // Heavy stamp thud
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(120, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.12);
+
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.12);
+
+    // Crackle noise
+    const bufferSize = ctx.sampleRate * 0.08;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
+    }
+
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.setValueAtTime(1800, ctx.currentTime);
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.1, ctx.currentTime);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+
+    noise.start();
+  } catch (e) {}
 }
 
 export function playPageFlipSound() {
@@ -46,7 +115,7 @@ export function playPageFlipSound() {
     const ctx = getAudioContext();
     if (!ctx) return;
 
-    const bufferSize = ctx.sampleRate * 0.1; // 100ms noise
+    const bufferSize = ctx.sampleRate * 0.12;
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
@@ -58,12 +127,12 @@ export function playPageFlipSound() {
 
     const filter = ctx.createBiquadFilter();
     filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(1200, ctx.currentTime);
-    filter.Q.setValueAtTime(3, ctx.currentTime);
+    filter.frequency.setValueAtTime(900, ctx.currentTime);
+    filter.Q.setValueAtTime(2.5, ctx.currentTime);
 
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.08, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
 
     noise.connect(filter);
     filter.connect(gain);
@@ -90,7 +159,6 @@ export function startAmbientSoundscape(type = 'rain') {
     if (!ctx) return;
 
     if (type === 'rain') {
-      // White noise pink filter for rain
       const bufferSize = ctx.sampleRate * 2;
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
       const output = buffer.getChannelData(0);
@@ -104,7 +172,7 @@ export function startAmbientSoundscape(type = 'rain') {
         b4 = 0.55000 * b4 + white * 0.5329522;
         b5 = -0.7616 * b5 - white * 0.0168980;
         output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
-        output[i] *= 0.03;
+        output[i] *= 0.035;
         b6 = white * 0.115926;
       }
       const whiteNoise = ctx.createBufferSource();
@@ -113,10 +181,10 @@ export function startAmbientSoundscape(type = 'rain') {
 
       const filter = ctx.createBiquadFilter();
       filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(800, ctx.currentTime);
+      filter.frequency.setValueAtTime(750, ctx.currentTime);
 
       const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.05, ctx.currentTime);
+      gain.gain.setValueAtTime(0.06, ctx.currentTime);
 
       whiteNoise.connect(filter);
       filter.connect(gain);
@@ -125,7 +193,6 @@ export function startAmbientSoundscape(type = 'rain') {
 
       ambientNodes.push(whiteNoise, filter, gain);
     } else if (type === 'focus') {
-      // Binaural alpha drone (200Hz + 210Hz)
       const osc1 = ctx.createOscillator();
       const osc2 = ctx.createOscillator();
       const gain = ctx.createGain();

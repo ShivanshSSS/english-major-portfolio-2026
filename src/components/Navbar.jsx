@@ -52,10 +52,11 @@ export default function Navbar() {
   };
 
   const themeOptions = [
+    { id: 'creamy-victorian', label: 'Velvet Cream', icon: Feather },
+    { id: 'parchment-punk', label: 'Parchment', icon: BookOpen },
+    { id: 'monastic-gold', label: 'Liquid Gold', icon: Sparkles },
     { id: 'midnight-ink', label: 'Obsidian Ink', icon: Moon },
-    { id: 'parchment-punk', label: 'Parchment', icon: Feather },
-    { id: 'cyber-gothic', label: 'Cyber Gothic', icon: Terminal },
-    { id: 'monastic-gold', label: 'Liquid Gold', icon: Sparkles }
+    { id: 'cyber-gothic', label: 'Cyber Gothic', icon: Terminal }
   ];
 
   return (

@@ -16,7 +16,7 @@ export function PortfolioProvider({ children }) {
     return INITIAL_DATA;
   });
 
-  const [activeTheme, setActiveTheme] = useState('midnight-ink'); // 'midnight-ink', 'parchment-punk', 'cyber-gothic', 'monastic-gold'
+  const [activeTheme, setActiveTheme] = useState('creamy-victorian'); // 'creamy-victorian', 'parchment-punk', 'midnight-ink', 'monastic-gold', 'cyber-gothic'
   const [activeReaderWork, setActiveReaderWork] = useState(null);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
