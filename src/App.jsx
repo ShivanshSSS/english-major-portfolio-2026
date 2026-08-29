@@ -2,6 +2,8 @@ import React from 'react';
 import { PortfolioProvider } from './context/PortfolioContext';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
+import GothicMarqueeRibbon from './components/GothicMarqueeRibbon';
+import GothicArtGallery from './components/GothicArtGallery';
 import VictorianScrollGallery from './components/VictorianScrollGallery';
 import WorksSection from './components/WorksSection';
 import Bookshelf from './components/Bookshelf';
@@ -20,6 +22,8 @@ export default function App() {
         <Navbar />
         <main>
           <Hero />
+          <GothicMarqueeRibbon />
+          <GothicArtGallery />
           <VictorianScrollGallery />
           <WorksSection />
           <Bookshelf />

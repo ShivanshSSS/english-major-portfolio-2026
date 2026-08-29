@@ -37,6 +37,10 @@ export default function AdminPortalModal() {
     updateProfile,
     addAccolade,
     deleteAccolade,
+    addGalleryItem,
+    updateGalleryItem,
+    deleteGalleryItem,
+    updateGallerySettings,
     resetToDefault,
     importDataset
   } = usePortfolio();
@@ -88,6 +92,20 @@ export default function AdminPortalModal() {
     institution: '',
     description: ''
   });
+
+  // Gothic Gallery Form state
+  const [editingGalleryId, setEditingGalleryId] = useState(null);
+  const [galleryForm, setGalleryForm] = useState({
+    title: '',
+    artist: '',
+    year: '1888',
+    movement: 'Gothic Romanticism',
+    imageUrl: '',
+    description: ''
+  });
+  const [galleryIntervalInput, setGalleryIntervalInput] = useState(
+    data.gallerySettings?.intervalSeconds || 5
+  );
 
   if (!isAdminOpen) return null;
 
@@ -195,6 +213,41 @@ export default function AdminPortalModal() {
       institution: '',
       description: ''
     });
+  };
+
+  // Submit Gallery Item
+  const handleSaveGalleryItem = (e) => {
+    e.preventDefault();
+    if (!galleryForm.title || !galleryForm.imageUrl) return;
+
+    if (editingGalleryId) {
+      updateGalleryItem(editingGalleryId, galleryForm);
+      showToast('Artwork updated in Gothic Gallery!');
+      setEditingGalleryId(null);
+    } else {
+      addGalleryItem(galleryForm);
+      showToast('New artwork added to Gothic Gallery!');
+    }
+
+    setGalleryForm({
+      title: '',
+      artist: '',
+      year: '1888',
+      movement: 'Gothic Romanticism',
+      imageUrl: '',
+      description: ''
+    });
+  };
+
+  const handleEditGalleryClick = (art) => {
+    setEditingGalleryId(art.id);
+    setGalleryForm(art);
+  };
+
+  const handleSaveGalleryInterval = (e) => {
+    e.preventDefault();
+    updateGallerySettings({ intervalSeconds: parseInt(galleryIntervalInput) || 5 });
+    showToast(`Gallery slide interval updated to ${galleryIntervalInput}s!`);
   };
 
   // Export JSON
@@ -310,6 +363,12 @@ export default function AdminPortalModal() {
                 onClick={() => setActiveTab('accolades')}
               >
                 <Award size={16} /> Accolades ({data.accolades.length})
+              </button>
+              <button 
+                className={`tab-btn ${activeTab === 'gallery' ? 'active' : ''}`}
+                onClick={() => setActiveTab('gallery')}
+              >
+                <Sparkles size={16} /> Gothic Gallery ({data.gothicGallery?.length || 0})
               </button>
               <button 
                 className={`tab-btn ${activeTab === 'data' ? 'active' : ''}`}
@@ -738,7 +797,154 @@ export default function AdminPortalModal() {
               </div>
             )}
 
-            {/* Tab 5: Data & Backup */}
+            {/* Tab: Gothic Art Gallery Manager */}
+            {activeTab === 'gallery' && (
+              <div className="admin-tab-content">
+                {/* Carousel Interval Controls */}
+                <div className="gallery-timer-settings-card mb-4">
+                  <form onSubmit={handleSaveGalleryInterval} className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <Sparkles size={16} className="text-gold" />
+                      <div>
+                        <strong>Carousel Auto-Slide Speed</strong>
+                        <p className="text-xs text-muted">Time before rotating to next artwork automatically.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="number" 
+                        min="2" 
+                        max="60" 
+                        value={galleryIntervalInput}
+                        onChange={e => setGalleryIntervalInput(e.target.value)}
+                        className="w-20 text-center font-mono"
+                      />
+                      <span className="text-xs font-mono">seconds</span>
+                      <button type="submit" className="btn-secondary text-xs">
+                        Save Speed
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                <div className="admin-split">
+                  {/* Artwork Form */}
+                  <form onSubmit={handleSaveGalleryItem} className="admin-form">
+                    <h4>{editingGalleryId ? 'Edit Artwork' : 'Add Artwork to Gallery'}</h4>
+
+                    <div className="form-group">
+                      <label>Artwork Title</label>
+                      <input 
+                        type="text" 
+                        required 
+                        value={galleryForm.title} 
+                        onChange={e => setGalleryForm({...galleryForm, title: e.target.value})}
+                        placeholder="e.g. Wanderer Above the Sea of Fog"
+                      />
+                    </div>
+
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Artist / Scribe</label>
+                        <input 
+                          type="text" 
+                          required 
+                          value={galleryForm.artist} 
+                          onChange={e => setGalleryForm({...galleryForm, artist: e.target.value})}
+                          placeholder="e.g. Caspar David Friedrich"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Year / Era</label>
+                        <input 
+                          type="text" 
+                          value={galleryForm.year} 
+                          onChange={e => setGalleryForm({...galleryForm, year: e.target.value})}
+                          placeholder="e.g. 1818"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Art Movement / Style</label>
+                      <input 
+                        type="text" 
+                        value={galleryForm.movement} 
+                        onChange={e => setGalleryForm({...galleryForm, movement: e.target.value})}
+                        placeholder="e.g. German Gothic Romanticism"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Image URL (High-Res Public Domain)</label>
+                      <input 
+                        type="url" 
+                        required 
+                        value={galleryForm.imageUrl} 
+                        onChange={e => setGalleryForm({...galleryForm, imageUrl: e.target.value})}
+                        placeholder="https://..."
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Curatorial Literary Commentary & Analysis</label>
+                      <textarea 
+                        rows={3} 
+                        value={galleryForm.description} 
+                        onChange={e => setGalleryForm({...galleryForm, description: e.target.value})}
+                        placeholder="Literary critique, aesthetic significance, or thematic context..."
+                      />
+                    </div>
+
+                    <div className="form-actions">
+                      <button type="submit" className="btn-primary">
+                        <Save size={16} /> {editingGalleryId ? 'Update Artwork' : 'Add to Gallery'}
+                      </button>
+                      {editingGalleryId && (
+                        <button 
+                          type="button" 
+                          className="btn-ghost" 
+                          onClick={() => {
+                            setEditingGalleryId(null);
+                            setGalleryForm({ title: '', artist: '', year: '1888', movement: 'Gothic Romanticism', imageUrl: '', description: '' });
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                  </form>
+
+                  {/* Artwork List */}
+                  <div className="admin-list">
+                    <h4>Artworks in Carousel ({(data.gothicGallery || []).length})</h4>
+                    <div className="list-items">
+                      {(data.gothicGallery || []).map(art => (
+                        <div key={art.id} className="admin-item-card">
+                          <img src={art.imageUrl} alt={art.title} className="w-12 h-12 object-cover rounded" />
+                          <div className="item-info flex-1 ml-2">
+                            <strong>{art.title}</strong>
+                            <span className="item-meta">{art.artist} ({art.year}) • {art.movement}</span>
+                          </div>
+                          <div className="item-controls">
+                            <button onClick={() => handleEditGalleryClick(art)} className="btn-icon">
+                              <Edit3 size={14} />
+                            </button>
+                            <button onClick={() => {
+                              if (confirm(`Delete "${art.title}"?`)) deleteGalleryItem(art.id);
+                            }} className="btn-icon text-red-400">
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab: Data & Backup */}
             {activeTab === 'data' && (
               <div className="admin-tab-content">
                 <div className="backup-controls-grid">

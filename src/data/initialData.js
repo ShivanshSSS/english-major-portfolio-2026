@@ -211,5 +211,56 @@ and touch the thumbprint of a scribe who died in 1492.`,
     { text: "To write is to transform lost time into something permanent.", author: "Virginia Woolf" },
     { text: "The book is a quiet craft that makes a loud noise in the mind.", author: "Umberto Eco" },
     { text: "Syntax is the skeleton of human thought in light.", author: "Aurora Vane" }
+  ],
+  gallerySettings: {
+    intervalSeconds: 5,
+    autoPlay: true
+  },
+  gothicGallery: [
+    {
+      id: "art-1",
+      title: "Wanderer Above the Sea of Fog",
+      artist: "Caspar David Friedrich",
+      year: "1818",
+      movement: "German Gothic Romanticism",
+      imageUrl: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1200&q=80",
+      description: "The definitive visual statement of the Kantian Sublime. The solitary observer confronts the vast, unquantifiable abyss of nature—a precursor to confronting high-dimensional synthetic latent space."
+    },
+    {
+      id: "art-2",
+      title: "The Lady of Shalott & Pre-Raphaelite Cadence",
+      artist: "John William Waterhouse",
+      year: "1888",
+      movement: "Pre-Raphaelite Brotherhood",
+      imageUrl: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=1200&q=80",
+      description: "Illustrating Tennyson’s tragic poem of artistic isolation. The woven web unravels when the artist gazes directly upon reality rather than through reflections."
+    },
+    {
+      id: "art-3",
+      title: "Gothic Cloister of the Dark Sublime",
+      artist: "Victorian Archival Photograph",
+      year: "1872",
+      movement: "Victorian Gothic Revival",
+      imageUrl: "https://images.unsplash.com/photo-1548625361-195fe57871bc?auto=format&fit=crop&w=1200&q=80",
+      description: "Pointed rib-vaulted stone arches casting dramatic chiaroscuro shadows across cold flagstones. The quintessential spatial setting for 19th-century ghost fiction."
+    },
+    {
+      id: "art-4",
+      title: "The Illuminated Vellum Codex",
+      artist: "Renaissance Monastic Scribe",
+      year: "1485",
+      movement: "Illuminated Manuscripts",
+      imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=1200&q=80",
+      description: "Hand-lettered iron gall ink with burnished gold leaf marginalia. Represents the tactile materiality of language before movable type."
+    },
+    {
+      id: "art-5",
+      title: "The Scholar's Midnight Sanctuary",
+      artist: "Oxford Bodleian Archive",
+      year: "1890",
+      movement: "Dark Academia",
+      imageUrl: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1200&q=80",
+      description: "Three-tier oak bookshelves lined with calfskin bindings, illuminated by the warm amber glow of a study lamp amid autumn silence."
+    }
   ]
 };

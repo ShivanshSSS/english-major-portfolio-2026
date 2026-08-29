@@ -8,7 +8,14 @@ export function PortfolioProvider({ children }) {
     try {
       const saved = localStorage.getItem('AURORA_PORTFOLIO_DATA_2026');
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        return {
+          ...INITIAL_DATA,
+          ...parsed,
+          profile: { ...INITIAL_DATA.profile, ...(parsed.profile || {}) },
+          gothicGallery: (parsed.gothicGallery && parsed.gothicGallery.length > 0) ? parsed.gothicGallery : INITIAL_DATA.gothicGallery,
+          gallerySettings: parsed.gallerySettings || INITIAL_DATA.gallerySettings
+        };
       }
     } catch (e) {
       console.error('Failed to load saved state', e);
@@ -114,6 +121,39 @@ export function PortfolioProvider({ children }) {
     }));
   };
 
+  // Gothic Gallery Actions
+  const addGalleryItem = (newItem) => {
+    const itemWithId = {
+      ...newItem,
+      id: 'art-' + Date.now()
+    };
+    setData(prev => ({
+      ...prev,
+      gothicGallery: [...(prev.gothicGallery || []), itemWithId]
+    }));
+  };
+
+  const updateGalleryItem = (id, updatedFields) => {
+    setData(prev => ({
+      ...prev,
+      gothicGallery: (prev.gothicGallery || []).map(g => g.id === id ? { ...g, ...updatedFields } : g)
+    }));
+  };
+
+  const deleteGalleryItem = (id) => {
+    setData(prev => ({
+      ...prev,
+      gothicGallery: (prev.gothicGallery || []).filter(g => g.id !== id)
+    }));
+  };
+
+  const updateGallerySettings = (newSettings) => {
+    setData(prev => ({
+      ...prev,
+      gallerySettings: { ...(prev.gallerySettings || { intervalSeconds: 5, autoPlay: true }), ...newSettings }
+    }));
+  };
+
   const resetToDefault = () => {
     setData(INITIAL_DATA);
     localStorage.removeItem('AURORA_PORTFOLIO_DATA_2026');
@@ -148,6 +188,10 @@ export function PortfolioProvider({ children }) {
         updateProfile,
         addAccolade,
         deleteAccolade,
+        addGalleryItem,
+        updateGalleryItem,
+        deleteGalleryItem,
+        updateGallerySettings,
         resetToDefault,
         importDataset
       }}

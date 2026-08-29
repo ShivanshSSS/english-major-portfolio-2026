@@ -2457,13 +2457,407 @@ body {
   gap: 0.9rem;
 }
 
-.hidden { display: none; }
-.cursor-pointer { cursor: pointer; }
+/* ==========================================================================
+   GOTHIC MARQUEE RIBBON (STARTING ANIMATED SCROLLING RIBBON)
+   ========================================================================== */
+
+.gothic-marquee-container {
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg-surface-elevated);
+  border-top: 1px solid var(--border-gold);
+  border-bottom: 1px solid var(--border-gold);
+  padding: 0.85rem 0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.gothic-marquee-track {
+  display: flex;
+  width: max-content;
+  gap: 3rem;
+  animation: marqueeScroll 28s linear infinite;
+}
+
+.gothic-marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marqueeScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.marquee-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.marquee-glyph {
+  color: var(--accent-gold);
+  font-size: 1.1rem;
+}
+
+/* ==========================================================================
+   GOTHIC & ROMANTICISM ART GALLERY CAROUSEL
+   ========================================================================== */
+
+.gothic-gallery-section {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 5rem 2rem;
+}
+
+.art-carousel-wrapper {
+  margin-top: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.8rem;
+}
+
+.art-carousel-frame {
+  background: var(--bg-surface-elevated);
+  border: 2px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+}
+
+.art-image-container {
+  position: relative;
+  height: 520px;
+  background: #000;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.art-main-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease, opacity 0.4s ease;
+}
+
+.art-image-container:hover .art-main-image {
+  transform: scale(1.03);
+}
+
+.art-top-toolbar {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  z-index: 10;
+}
+
+.art-counter {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.art-actions-group {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.art-tool-btn {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.art-tool-btn:hover {
+  background: var(--accent-gold);
+  color: #000;
+  border-color: var(--accent-gold);
+}
+
+.carousel-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.carousel-nav-btn.prev { left: 1.2rem; }
+.carousel-nav-btn.next { right: 1.2rem; }
+
+.carousel-nav-btn:hover {
+  background: var(--accent-gold);
+  color: #000;
+  border-color: var(--accent-gold);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.art-placard {
+  padding: 3rem 2.8rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--bg-surface-elevated);
+}
+
+.placard-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+
+.art-movement-tag {
+  background: var(--accent-glow);
+  color: var(--accent-gold);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: 4px;
+}
+
+.art-year-tag {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.art-title {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--text-primary);
+  margin-bottom: 0.4rem;
+}
+
+.art-artist {
+  font-size: 1.05rem;
+  color: var(--accent-gold);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.6rem;
+}
+
+.art-description {
+  font-size: 1.08rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  font-style: italic;
+  margin-bottom: 2rem;
+}
+
+.placard-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.5rem;
+  border-top: 1px dashed var(--border-color);
+}
+
+.carousel-dots {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.carousel-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border-color);
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.carousel-dot.active {
+  background: var(--accent-gold);
+  width: 26px;
+  border-radius: 10px;
+}
+
+.admin-edit-link {
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  text-decoration: underline;
+}
+
+.admin-edit-link:hover {
+  color: var(--accent-gold);
+}
+
+/* Thumbnail Strip */
+.art-thumbnail-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1rem;
+}
+
+.art-thumbnail-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.art-thumbnail-card:hover {
+  border-color: var(--accent-gold);
+  transform: translateY(-3px);
+}
+
+.art-thumbnail-card.active {
+  border: 2px solid var(--accent-gold);
+  box-shadow: 0 4px 15px var(--accent-glow);
+}
+
+.thumb-img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+}
+
+.thumb-caption {
+  padding: 0.7rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.thumb-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.thumb-artist {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* Lightbox Modal */
+.art-lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.94);
+  backdrop-filter: blur(16px);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.lightbox-content {
+  position: relative;
+  max-width: 1100px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.lightbox-close-btn {
+  position: absolute;
+  top: -45px;
+  right: 0;
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+.lightbox-image {
+  max-width: 100%;
+  max-height: 75vh;
+  object-fit: contain;
+  border: 2px solid var(--accent-gold);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+}
+
+.lightbox-caption {
+  margin-top: 1.2rem;
+  color: #fff;
+  text-align: center;
+  max-width: 800px;
+}
+
+.lightbox-caption h3 {
+  font-size: 1.3rem;
+  color: var(--accent-gold);
+  margin-bottom: 0.3rem;
+}
+
+.lightbox-caption p {
+  font-size: 0.95rem;
+  color: #D1D5DB;
+  font-style: italic;
+}
+
+.gallery-timer-settings-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  padding: 1rem 1.4rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+}
 
 /* Responsive adjustments */
 @media (max-width: 900px) {
   .hero-title { font-size: 3rem; }
   .nav-links { display: none; }
+  .art-carousel-frame { grid-template-columns: 1fr; }
+  .art-image-container { height: 340px; }
   .gallery-main-layout { grid-template-columns: 1fr; }
   .typewriter-studio-layout { grid-template-columns: 1fr; }
   .reader-modal-body { grid-template-columns: 1fr; }
