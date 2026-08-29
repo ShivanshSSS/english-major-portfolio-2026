@@ -63,6 +63,8 @@ export default function GothicArtGallery() {
 
   const currentArt = gallery[currentIndex] || gallery[0];
 
+  const galleryTexts = data.siteTexts?.gallery || {};
+
   return (
     <section id="gallery" className="gothic-gallery-section border-t border-cream-accent">
       {/* Header */}
@@ -70,13 +72,13 @@ export default function GothicArtGallery() {
         <div className="ornamental-header-divider">
           <span>❦</span>
           <span className="divider-line"></span>
-          <span className="section-kicker"><Sparkles size={15} /> CURATED ARTWORK & LITERATURE ARCHIVE</span>
+          <span className="section-kicker"><Sparkles size={15} /> {galleryTexts.kicker || "VISUAL MEMORIES"}</span>
           <span className="divider-line"></span>
           <span>❦</span>
         </div>
-        <h2 className="section-title font-display">THE GOTHIC & ROMANTICISM GALLERY</h2>
+        <h2 className="section-title font-display">{galleryTexts.title || "SCENES & VISUAL MOODS"}</h2>
         <p className="section-desc mx-auto">
-          Freely available public domain masterpieces, pre-Raphaelite studies, and dark academic visions shaping 2026 narrative theory. Manageable in real-time via the <strong>Admin Portal</strong>.
+          {galleryTexts.description || "Atmospheric scenes and night skies reflecting memories of Sundar Nagar, quiet rooftops, and distant horizons."}
         </p>
       </div>
 
@@ -147,11 +149,15 @@ export default function GothicArtGallery() {
             </div>
 
             <h3 className="art-title font-serif">{currentArt.title}</h3>
-            <h4 className="art-artist font-display">by {currentArt.artist}</h4>
+            {currentArt.artist && (
+              <h4 className="art-artist font-display">{currentArt.artist}</h4>
+            )}
 
-            <p className="art-description font-serif">
-              "{currentArt.description}"
-            </p>
+            {currentArt.description && (
+              <p className="art-description font-serif">
+                "{currentArt.description}"
+              </p>
+            )}
 
             <div className="placard-footer">
               <div className="carousel-dots">
@@ -202,8 +208,8 @@ export default function GothicArtGallery() {
             </button>
             <img src={currentArt.imageUrl} alt={currentArt.title} className="lightbox-image" />
             <div className="lightbox-caption font-serif">
-              <h3>{currentArt.title} ({currentArt.year}) — {currentArt.artist}</h3>
-              <p>"{currentArt.description}"</p>
+              <h3>{currentArt.title} ({currentArt.year}) {currentArt.artist ? `— ${currentArt.artist}` : ''}</h3>
+              {currentArt.description && <p>"{currentArt.description}"</p>}
             </div>
           </div>
         </div>

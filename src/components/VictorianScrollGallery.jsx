@@ -17,42 +17,42 @@ export default function VictorianScrollGallery() {
     {
       id: "plate-1",
       number: "PLATE I",
-      title: "The Ptolemaic Celestial Astrolabe",
-      year: "Anno 1543",
-      category: "Cosmographical Hermeneutics",
-      description: "Copperplate engraving charting planetary spheres and the celestial equator. Used in 2026 digital poetics as a spatial metaphor for latent narrative embeddings.",
+      title: "The Celestial Ursa Major (The Spoon)",
+      year: "Sundar Nagar Night Sky",
+      category: "Constellation & Family",
+      description: "Copperplate engraving charting the celestial equator and the Big Dipper. Represents the one constant family member returning to the roof in Sundar Nagar every night.",
       Component: AstrolabeEngraving,
-      tag: "Spatial Narratology"
+      tag: "The Spoon (#07)"
     },
     {
       id: "plate-2",
       number: "PLATE II",
-      title: "Herbarium & Spore Morphology",
-      year: "Anno 1874",
-      category: "Botanical Taxonomy",
-      description: "Fine steel etching from Curtis's Botanical Magazine. Symbolizes the organic branching of intertextual references across Victorian prose.",
+      title: "The June Gloom & Summer's Day",
+      year: "Manuscript #02",
+      category: "Seasons & Growth",
+      description: "Botanical etching symbolizing the longing for sun: 'I pray to Gods, like a farmer, for the Sun to bless me again, and bring my smiles and hopes back; like flowers, and leaves, and life.'",
       Component: BotanicalFernEngraving,
-      tag: "Organic Cadence"
+      tag: "Seasons of Love"
     },
     {
       id: "plate-3",
       number: "PLATE III",
-      title: "Gutenberg's Movable Type Press",
-      year: "Anno 1568",
-      category: "Material Bibliography",
-      description: "Woodcut depicting the early mechanical screw press, the foundational hardware ancestor of modern tokenizer architectures.",
+      title: "The Thousand-Book Library",
+      year: "Manuscript #18",
+      category: "Material Memory",
+      description: "Engraving of the printing press and archive: 'It’s a library if it has a thousand books, and ours has long crossed that number, so stop calling it a collection now.'",
       Component: PrintingPressEngraving,
-      tag: "Mechanical Inscription"
+      tag: "Bathing with my Love"
     },
     {
       id: "plate-4",
       number: "PLATE IV",
-      title: "Calliope, Muse of Epic Poetry",
-      year: "Classical Greek / Roman",
-      category: "Rhetorical Aesthetics",
-      description: "Classical marble bust etching celebrating rhythm, cadence, and human eloquence at the threshold of post-human AI synthesis.",
+      title: "Calliope & The Lyrical Elegy",
+      year: "Manuscript #14 & #17",
+      category: "Melody & Distance",
+      description: "Classical marble bust celebrating the shared songs of memory: Daniel Lanois' 'Red' and Sade's 'Lover's Rock' echoing across memory and distance.",
       Component: ClassicalStatueEngraving,
-      tag: "Classical Rhetoric"
+      tag: "Lover's Rock"
     }
   ];
 

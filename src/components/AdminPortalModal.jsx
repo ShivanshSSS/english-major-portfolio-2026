@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePortfolio } from '../context/PortfolioContext';
 import { 
   X, 
@@ -17,9 +17,22 @@ import {
   Award, 
   Database,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Sparkles,
+  Type,
+  ArrowUp,
+  ArrowDown,
+  Clock,
+  Globe,
+  Image as ImageIcon,
+  Check
 } from 'lucide-react';
 import { playTypewriterSound } from '../utils/audioSynth';
+import { 
+  compressImageFile, 
+  getCloudConfig, 
+  saveCloudConfig 
+} from '../utils/cloudSync';
 
 export default function AdminPortalModal() {
   const { 
@@ -28,6 +41,8 @@ export default function AdminPortalModal() {
     setIsAdminOpen, 
     isAdminAuthenticated, 
     setIsAdminAuthenticated,
+    cloudSyncStatus,
+    triggerManualCloudSync,
     addWork,
     updateWork,
     deleteWork,
@@ -35,11 +50,13 @@ export default function AdminPortalModal() {
     updateBook,
     deleteBook,
     updateProfile,
+    updateSiteTexts,
     addAccolade,
     deleteAccolade,
     addGalleryItem,
     updateGalleryItem,
     deleteGalleryItem,
+    moveGalleryItem,
     updateGallerySettings,
     resetToDefault,
     importDataset
@@ -47,45 +64,54 @@ export default function AdminPortalModal() {
 
   const [passcode, setPasscode] = useState('');
   const [authError, setAuthError] = useState('');
-  const [activeTab, setActiveTab] = useState('works'); // 'works', 'bookshelf', 'profile', 'accolades', 'data'
+  const [activeTab, setActiveTab] = useState('texts'); // 'texts', 'works', 'bookshelf', 'gallery', 'profile', 'accolades', 'data'
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Form states for adding work
+  // 1. Site Texts Form State
+  const [textsForm, setTextsForm] = useState(data.siteTexts || {});
+
+  // Sync textsForm whenever data.siteTexts changes
+  useEffect(() => {
+    if (data.siteTexts) {
+      setTextsForm(data.siteTexts);
+    }
+  }, [data.siteTexts]);
+
+  // 2. Work Form States
   const [editingWorkId, setEditingWorkId] = useState(null);
   const [workForm, setWorkForm] = useState({
     title: '',
-    category: 'Essay',
-    topicTag: 'Digital Humanities',
-    publication: 'Self-Published / Codex',
+    category: 'Poetry',
+    topicTag: 'Philosophy of Love',
+    publication: 'Original Folio',
     date: '2026',
     excerpt: '',
-    readTime: '5 min read',
-    sentiment: 'Analytical',
-    complexityScore: '85/100',
+    readTime: '3 min read',
+    sentiment: 'Reflective',
+    complexityScore: '100/100',
     featured: false,
-    content: '',
-    annotations: []
+    content: ''
   });
 
-  // Anno temporary inputs
-  const [annoPhrase, setAnnoPhrase] = useState('');
-  const [annoNote, setAnnoNote] = useState('');
-
-  // Form states for adding book
+  // 3. Book Form State
+  const [editingBookId, setEditingBookId] = useState(null);
   const [bookForm, setBookForm] = useState({
     title: '',
     author: '',
-    coverColor: 'from-purple-800 to-indigo-950',
-    progress: 50,
-    status: 'Currently Reading',
+    coverColor: 'from-amber-900 to-stone-900',
+    progress: 100,
+    status: 'Finished',
     rating: 5,
     notes: ''
   });
 
-  // Profile Form state
-  const [profileForm, setProfileForm] = useState(data.profile);
+  // 4. Profile Form State
+  const [profileForm, setProfileForm] = useState(data.profile || {});
+  useEffect(() => {
+    if (data.profile) setProfileForm(data.profile);
+  }, [data.profile]);
 
-  // Accolade Form state
+  // 5. Accolade Form State
   const [accForm, setAccForm] = useState({
     year: '2026',
     title: '',
@@ -93,66 +119,83 @@ export default function AdminPortalModal() {
     description: ''
   });
 
-  // Gothic Gallery Form state
+  // 6. Gallery Form State
   const [editingGalleryId, setEditingGalleryId] = useState(null);
   const [galleryForm, setGalleryForm] = useState({
     title: '',
     artist: '',
-    year: '1888',
-    movement: 'Gothic Romanticism',
+    year: '2026',
+    movement: 'Visual Mood',
     imageUrl: '',
     description: ''
   });
-  const [galleryIntervalInput, setGalleryIntervalInput] = useState(
-    data.gallerySettings?.intervalSeconds || 5
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  // Gallery Timing State
+  const [galleryTimingForm, setGalleryTimingForm] = useState(
+    data.gallerySettings || { intervalSeconds: 5, autoPlay: true }
   );
+  useEffect(() => {
+    if (data.gallerySettings) setGalleryTimingForm(data.gallerySettings);
+  }, [data.gallerySettings]);
+
+  // Cloud Config State
+  const [cloudConfigForm, setCloudConfigForm] = useState(() => getCloudConfig());
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isAdminOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isAdminOpen]);
 
   if (!isAdminOpen) return null;
 
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (passcode === '1234' || passcode === 'admin' || passcode === 'folio2026') {
+      setIsAdminAuthenticated(true);
+      setAuthError('');
+      showToast('Welcome to the Content Editor Portal!');
+    } else {
+      setAuthError('Incorrect passcode. Use default: 1234 or admin');
+    }
+  };
+
   const showToast = (msg) => {
+    playTypewriterSound();
     setSuccessMsg(msg);
     setTimeout(() => setSuccessMsg(''), 3000);
   };
 
-  const handleLogin = (e) => {
+  const handleSaveSiteTexts = (e) => {
     e.preventDefault();
-    if (passcode === 'admin2026' || passcode === 'admin' || passcode === 'admin123') {
-      setIsAdminAuthenticated(true);
-      setAuthError('');
-      showToast('Authenticated as Administrator!');
-    } else {
-      setAuthError('Invalid passcode. Try "admin2026"');
-    }
+    updateSiteTexts(textsForm);
+    showToast('Saved all website texts & headings!');
   };
 
-  // Submit Work
+  const handleSaveProfile = (e) => {
+    e.preventDefault();
+    updateProfile(profileForm);
+    showToast('Saved author profile & socials!');
+  };
+
+  // Work Handlers
   const handleSaveWork = (e) => {
     e.preventDefault();
-    if (!workForm.title || !workForm.content) return;
-
     if (editingWorkId) {
       updateWork(editingWorkId, workForm);
-      showToast('Work updated successfully!');
-      setEditingWorkId(null);
+      showToast(`Updated "${workForm.title}"`);
     } else {
       addWork(workForm);
-      showToast('New literary work published to live portfolio!');
+      showToast(`Published "${workForm.title}"`);
     }
-
-    setWorkForm({
-      title: '',
-      category: 'Essay',
-      topicTag: 'Digital Humanities',
-      publication: 'Self-Published / Codex',
-      date: '2026',
-      excerpt: '',
-      readTime: '5 min read',
-      sentiment: 'Analytical',
-      complexityScore: '85/100',
-      featured: false,
-      content: '',
-      annotations: []
-    });
+    resetWorkForm();
   };
 
   const handleEditWorkClick = (work) => {
@@ -160,215 +203,238 @@ export default function AdminPortalModal() {
     setWorkForm(work);
   };
 
-  const handleAddAnnotation = () => {
-    if (!annoPhrase || !annoNote) return;
-    setWorkForm(prev => ({
-      ...prev,
-      annotations: [...(prev.annotations || []), { phrase: annoPhrase, note: annoNote }]
-    }));
-    setAnnoPhrase('');
-    setAnnoNote('');
+  const resetWorkForm = () => {
+    setEditingWorkId(null);
+    setWorkForm({
+      title: '',
+      category: 'Poetry',
+      topicTag: 'Philosophy of Love',
+      publication: 'Original Folio',
+      date: '2026',
+      excerpt: '',
+      readTime: '3 min read',
+      sentiment: 'Reflective',
+      complexityScore: '100/100',
+      featured: false,
+      content: ''
+    });
   };
 
-  const handleRemoveAnnotation = (idx) => {
-    setWorkForm(prev => ({
-      ...prev,
-      annotations: prev.annotations.filter((_, i) => i !== idx)
-    }));
-  };
-
-  // Submit Book
+  // Bookshelf Handlers
   const handleSaveBook = (e) => {
     e.preventDefault();
-    if (!bookForm.title || !bookForm.author) return;
-    addBook(bookForm);
-    showToast('Book added to Curator Shelf!');
+    if (editingBookId && updateBook) {
+      updateBook(editingBookId, bookForm);
+      showToast(`Updated "${bookForm.title}"`);
+    } else {
+      addBook(bookForm);
+      showToast(`Added "${bookForm.title}" to Bookshelf`);
+    }
+    setEditingBookId(null);
     setBookForm({
       title: '',
       author: '',
-      coverColor: 'from-purple-800 to-indigo-950',
-      progress: 50,
-      status: 'Currently Reading',
-      rating: 5,
-      notes: ''
-    });
-  };
-
-  // Submit Profile
-  const handleSaveProfile = (e) => {
-    e.preventDefault();
-    updateProfile(profileForm);
-    showToast('Author Profile & Stats saved!');
-  };
-
-  // Submit Accolade
-  const handleSaveAccolade = (e) => {
-    e.preventDefault();
-    if (!accForm.title || !accForm.institution) return;
-    addAccolade(accForm);
-    showToast('Accolade added to Academic Record!');
-    setAccForm({
       year: '2026',
-      title: '',
-      institution: '',
-      description: ''
+      genre: 'Classic',
+      notes: '',
+      coverColor: 'from-amber-900 to-stone-900',
+      status: 'Finished'
     });
   };
 
-  // Submit Gallery Item
-  const handleSaveGalleryItem = (e) => {
+  // Accolade Handler
+  const handleAddAccolade = (e) => {
     e.preventDefault();
-    if (!galleryForm.title || !galleryForm.imageUrl) return;
+    addAccolade(accForm);
+    showToast(`Added milestone "${accForm.title}"`);
+    setAccForm({ year: '2026', title: '', institution: '', description: '' });
+  };
 
+  // Gallery Handlers
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploadingImage(true);
+      const base64 = await compressImageFile(file, 1280, 0.85);
+      setGalleryForm(prev => ({ ...prev, imageUrl: base64 }));
+      showToast('Photo uploaded from device!');
+    } catch (err) {
+      alert('Failed to process image: ' + err.message);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleSaveGallery = (e) => {
+    e.preventDefault();
     if (editingGalleryId) {
       updateGalleryItem(editingGalleryId, galleryForm);
-      showToast('Artwork updated in Gothic Gallery!');
-      setEditingGalleryId(null);
+      showToast(`Updated gallery item "${galleryForm.title}"`);
     } else {
       addGalleryItem(galleryForm);
-      showToast('New artwork added to Gothic Gallery!');
+      showToast(`Added "${galleryForm.title}" to gallery`);
     }
-
+    setEditingGalleryId(null);
     setGalleryForm({
       title: '',
       artist: '',
-      year: '1888',
-      movement: 'Gothic Romanticism',
+      year: '2026',
+      movement: 'Visual Mood',
       imageUrl: '',
       description: ''
     });
   };
 
-  const handleEditGalleryClick = (art) => {
-    setEditingGalleryId(art.id);
-    setGalleryForm(art);
-  };
-
-  const handleSaveGalleryInterval = (e) => {
+  const handleSaveGallerySettings = (e) => {
     e.preventDefault();
-    updateGallerySettings({ intervalSeconds: parseInt(galleryIntervalInput) || 5 });
-    showToast(`Gallery slide interval updated to ${galleryIntervalInput}s!`);
+    updateGallerySettings(galleryTimingForm);
+    showToast(`Slide timing set to ${galleryTimingForm.intervalSeconds}s!`);
   };
 
-  // Export JSON
-  const handleExportJson = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `aurora_portfolio_backup_${Date.now()}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
-    showToast('Portfolio JSON exported!');
+  const handleSaveCloudConfig = (e) => {
+    e.preventDefault();
+    saveCloudConfig(cloudConfigForm);
+    showToast('Cloud sync settings saved!');
   };
 
-  // Import JSON
-  const handleImportJson = (e) => {
-    const fileReader = new FileReader();
-    if (e.target.files[0]) {
-      fileReader.readAsText(e.target.files[0], "UTF-8");
-      fileReader.onload = (event) => {
-        try {
-          const parsed = JSON.parse(event.target.result);
-          importDataset(parsed);
-          showToast('Imported database successfully!');
-        } catch (err) {
-          alert('Invalid JSON file format.');
-        }
-      };
-    }
+  // Backup / Export Handler
+  const handleExportData = () => {
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `portfolio_backup_${new Date().toISOString().slice(0,10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast('Exported backup successfully!');
+  };
+
+  const handleExportCodeFile = () => {
+    const code = `/**
+ * Master Portfolio Dataset (Exported from Admin Portal)
+ * Auto-generated on ${new Date().toISOString()}
+ */
+
+export const INITIAL_DATA = ${JSON.stringify(data, null, 2)};
+`;
+    const blob = new Blob([code], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'initialData.js';
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast('Downloaded initialData.js code file!');
+  };
+
+  const handleImportFile = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target.result);
+        importDataset(parsed);
+        showToast('Imported dataset successfully!');
+      } catch (err) {
+        alert('Invalid JSON file format.');
+      }
+    };
+    reader.readAsText(file);
   };
 
   return (
-    <div className="admin-modal-overlay">
-      <div className="admin-modal-card">
+    <div className="admin-modal-overlay" onClick={() => setIsAdminOpen(false)}>
+      <div className="admin-modal-card animate-fade-in" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="admin-modal-header">
           <div className="admin-brand">
-            <ShieldCheck className="text-gold" size={20} />
-            <span>ADMINISTRATIVE PORTAL // CONTENT MATRIX</span>
+            <ShieldCheck size={20} className="text-gold" />
+            <span>AUTHOR & CONTENT MANAGEMENT PORTAL</span>
           </div>
-          <button className="close-btn" onClick={() => setIsAdminOpen(false)}>
-            <X size={20} />
+          <button className="close-btn" onClick={() => setIsAdminOpen(false)} title="Close Admin">
+            <X size={18} />
           </button>
         </div>
 
-        {/* Auth Check Screen */}
+        {/* Success Alert */}
+        {successMsg && (
+          <div className="admin-toast animate-fade-in">
+            <CheckCircle size={16} /> {successMsg}
+          </div>
+        )}
+
+        {/* Body */}
         {!isAdminAuthenticated ? (
           <div className="admin-auth-box">
             <div className="auth-icon-wrap">
-              <Lock size={36} className="text-gold" />
+              <Lock size={32} className="text-gold" />
             </div>
-            <h3>Authenticate Access</h3>
-            <p>Enter administrative passcode to unlock content editing, bookshelf management, and database export tools.</p>
+            <h3 className="auth-title font-display">Editor Authentication</h3>
+            <p className="auth-desc">Enter editor passcode to modify website texts, manuscripts, and settings.</p>
             
             <form onSubmit={handleLogin} className="auth-form">
               <input
                 type="password"
-                placeholder="Enter Passcode (default: admin2026)"
+                placeholder="Enter passcode (default: 1234)"
                 value={passcode}
-                onChange={(e) => setPasscode(e.target.value)}
+                onChange={e => setPasscode(e.target.value)}
                 className="auth-input"
+                autoFocus
               />
-              <button type="submit" className="btn-primary full-width">
+              {authError && <div className="auth-error-msg">{authError}</div>}
+              <button type="submit" className="btn-primary w-full">
                 Unlock Portal
               </button>
-              <button 
-                type="button" 
-                className="btn-ghost full-width text-xs mt-2"
-                onClick={() => {
-                  setPasscode('admin2026');
-                  setIsAdminAuthenticated(true);
-                  showToast('Quick unlocked with default passcode!');
-                }}
-              >
-                Instant Quick-Unlock (Demo Mode)
-              </button>
             </form>
-
-            {authError && <div className="auth-error-msg"><AlertCircle size={14} /> {authError}</div>}
           </div>
         ) : (
-          /* Authenticated Dashboard */
-          <div className="admin-dashboard-body">
-            {/* Success Toast */}
-            {successMsg && (
-              <div className="admin-toast animate-fade-in">
-                <CheckCircle size={16} /> {successMsg}
-              </div>
-            )}
-
-            {/* Admin Tabs */}
-            <div className="admin-tabs">
+          <div className="admin-dashboard-layout">
+            {/* Sidebar Tabs */}
+            <div className="admin-tabs-nav">
+              <button 
+                className={`tab-btn ${activeTab === 'texts' ? 'active' : ''}`}
+                onClick={() => setActiveTab('texts')}
+              >
+                <Type size={16} /> Site Texts & Headings
+              </button>
               <button 
                 className={`tab-btn ${activeTab === 'works' ? 'active' : ''}`}
                 onClick={() => setActiveTab('works')}
               >
-                <BookOpen size={16} /> Manage Works ({data.works.length})
-              </button>
-              <button 
-                className={`tab-btn ${activeTab === 'bookshelf' ? 'active' : ''}`}
-                onClick={() => setActiveTab('bookshelf')}
-              >
-                <Layers size={16} /> Bookshelf ({data.bookshelf.length})
-              </button>
-              <button 
-                className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
-                onClick={() => setActiveTab('profile')}
-              >
-                <User size={16} /> Profile & Bio
-              </button>
-              <button 
-                className={`tab-btn ${activeTab === 'accolades' ? 'active' : ''}`}
-                onClick={() => setActiveTab('accolades')}
-              >
-                <Award size={16} /> Accolades ({data.accolades.length})
+                <BookOpen size={16} /> Writings ({data.works?.length || 0})
               </button>
               <button 
                 className={`tab-btn ${activeTab === 'gallery' ? 'active' : ''}`}
                 onClick={() => setActiveTab('gallery')}
               >
-                <Sparkles size={16} /> Gothic Gallery ({data.gothicGallery?.length || 0})
+                <Sparkles size={16} /> Visual Gallery ({data.gothicGallery?.length || 0})
+              </button>
+              <button 
+                className={`tab-btn ${activeTab === 'bookshelf' ? 'active' : ''}`}
+                onClick={() => setActiveTab('bookshelf')}
+              >
+                <Layers size={16} /> Bookshelf ({data.bookshelf?.length || 0})
+              </button>
+              <button 
+                className={`tab-btn ${activeTab === 'accolades' ? 'active' : ''}`}
+                onClick={() => setActiveTab('accolades')}
+              >
+                <Award size={16} /> Milestones ({data.accolades?.length || 0})
+              </button>
+              <button 
+                className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
+                onClick={() => setActiveTab('profile')}
+              >
+                <User size={16} /> Profile & Socials
+              </button>
+              <button 
+                className={`tab-btn ${activeTab === 'sync' ? 'active' : ''}`}
+                onClick={() => setActiveTab('sync')}
+              >
+                <Globe size={16} /> Global Live Sync & Deploy
               </button>
               <button 
                 className={`tab-btn ${activeTab === 'data' ? 'active' : ''}`}
@@ -378,13 +444,473 @@ export default function AdminPortalModal() {
               </button>
             </div>
 
-            {/* Tab 1: Works Manager */}
+            {/* TAB 1: ALL SITE TEXTS & HEADINGS */}
+            {activeTab === 'texts' && (
+              <div className="admin-tab-content">
+                <form onSubmit={handleSaveSiteTexts} className="admin-form full-width">
+                  <div className="form-section-header">
+                    <h4>Edit All Website Headings, Titles & Descriptions</h4>
+                    <button type="submit" className="btn-primary">
+                      <Save size={16} /> Save All Website Texts
+                    </button>
+                  </div>
+
+                  {/* 1. Hero Section Texts */}
+                  <fieldset className="form-fieldset">
+                    <legend className="font-mono text-gold">1. HERO BANNER & HEADER</legend>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Status Badge Text</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.hero?.statusBadge || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            hero: { ...(textsForm.hero || {}), statusBadge: e.target.value }
+                          })}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Subtitle / Sub-Header</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.hero?.subtitle || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            hero: { ...(textsForm.hero || {}), subtitle: e.target.value }
+                          })}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Title Main Word (e.g. SELECTED)</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.hero?.titleMain || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            hero: { ...(textsForm.hero || {}), titleMain: e.target.value }
+                          })}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Title Highlight Word (e.g. WRITINGS)</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.hero?.titleHighlight || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            hero: { ...(textsForm.hero || {}), titleHighlight: e.target.value }
+                          })}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Hero Tagline / Description</label>
+                      <textarea 
+                        rows={2}
+                        value={textsForm.hero?.tagline || ''} 
+                        onChange={e => setTextsForm({
+                          ...textsForm,
+                          hero: { ...(textsForm.hero || {}), tagline: e.target.value }
+                        })}
+                      />
+                    </div>
+
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Primary Button Label</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.hero?.btnPrimary || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            hero: { ...(textsForm.hero || {}), btnPrimary: e.target.value }
+                          })}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Editor Button Label</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.hero?.btnAdmin || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            hero: { ...(textsForm.hero || {}), btnAdmin: e.target.value }
+                          })}
+                        />
+                      </div>
+                    </div>
+                  </fieldset>
+
+                  {/* 2. Hero Themes Pills */}
+                  <fieldset className="form-fieldset">
+                    <legend className="font-mono text-gold">2. HERO THEME PILLS & DEFINITIONS</legend>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Theme 1 Title</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.hero?.theme1Word || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            hero: { ...(textsForm.hero || {}), theme1Word: e.target.value }
+                          })}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Theme 1 Description</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.hero?.theme1Def || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            hero: { ...(textsForm.hero || {}), theme1Def: e.target.value }
+                          })}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Theme 2 Title</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.hero?.theme2Word || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            hero: { ...(textsForm.hero || {}), theme2Word: e.target.value }
+                          })}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Theme 2 Description</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.hero?.theme2Def || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            hero: { ...(textsForm.hero || {}), theme2Def: e.target.value }
+                          })}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Theme 3 Title</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.hero?.theme3Word || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            hero: { ...(textsForm.hero || {}), theme3Word: e.target.value }
+                          })}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Theme 3 Description</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.hero?.theme3Def || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            hero: { ...(textsForm.hero || {}), theme3Def: e.target.value }
+                          })}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Theme 4 Title</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.hero?.theme4Word || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            hero: { ...(textsForm.hero || {}), theme4Word: e.target.value }
+                          })}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Theme 4 Description</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.hero?.theme4Def || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            hero: { ...(textsForm.hero || {}), theme4Def: e.target.value }
+                          })}
+                        />
+                      </div>
+                    </div>
+                  </fieldset>
+
+                  {/* 3. Section Headings & Descriptions */}
+                  <fieldset className="form-fieldset">
+                    <legend className="font-mono text-gold">3. SECTION HEADINGS & DESCRIPTIONS</legend>
+                    
+                    {/* Works Section */}
+                    <div className="form-sub-block">
+                      <h5 className="font-mono text-sm">Writings Archive Section</h5>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Kicker / Small Badge</label>
+                          <input 
+                            type="text" 
+                            value={textsForm.works?.kicker || ''} 
+                            onChange={e => setTextsForm({
+                              ...textsForm,
+                              works: { ...(textsForm.works || {}), kicker: e.target.value }
+                            })}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Section Title</label>
+                          <input 
+                            type="text" 
+                            value={textsForm.works?.title || ''} 
+                            onChange={e => setTextsForm({
+                              ...textsForm,
+                              works: { ...(textsForm.works || {}), title: e.target.value }
+                            })}
+                          />
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label>Description</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.works?.description || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            works: { ...(textsForm.works || {}), description: e.target.value }
+                          })}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Gallery Section */}
+                    <div className="form-sub-block mt-4">
+                      <h5 className="font-mono text-sm">Visual Gallery Section</h5>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Kicker / Small Badge</label>
+                          <input 
+                            type="text" 
+                            value={textsForm.gallery?.kicker || ''} 
+                            onChange={e => setTextsForm({
+                              ...textsForm,
+                              gallery: { ...(textsForm.gallery || {}), kicker: e.target.value }
+                            })}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Section Title</label>
+                          <input 
+                            type="text" 
+                            value={textsForm.gallery?.title || ''} 
+                            onChange={e => setTextsForm({
+                              ...textsForm,
+                              gallery: { ...(textsForm.gallery || {}), title: e.target.value }
+                            })}
+                          />
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label>Description</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.gallery?.description || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            gallery: { ...(textsForm.gallery || {}), description: e.target.value }
+                          })}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Bookshelf Section */}
+                    <div className="form-sub-block mt-4">
+                      <h5 className="font-mono text-sm">Bookshelf Section</h5>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Kicker / Small Badge</label>
+                          <input 
+                            type="text" 
+                            value={textsForm.bookshelf?.kicker || ''} 
+                            onChange={e => setTextsForm({
+                              ...textsForm,
+                              bookshelf: { ...(textsForm.bookshelf || {}), kicker: e.target.value }
+                            })}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Section Title</label>
+                          <input 
+                            type="text" 
+                            value={textsForm.bookshelf?.title || ''} 
+                            onChange={e => setTextsForm({
+                              ...textsForm,
+                              bookshelf: { ...(textsForm.bookshelf || {}), title: e.target.value }
+                            })}
+                          />
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label>Description</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.bookshelf?.description || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            bookshelf: { ...(textsForm.bookshelf || {}), description: e.target.value }
+                          })}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Typewriter Desk Section */}
+                    <div className="form-sub-block mt-4">
+                      <h5 className="font-mono text-sm">Typewriter Desk Section</h5>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Kicker / Small Badge</label>
+                          <input 
+                            type="text" 
+                            value={textsForm.typewriter?.kicker || ''} 
+                            onChange={e => setTextsForm({
+                              ...textsForm,
+                              typewriter: { ...(textsForm.typewriter || {}), kicker: e.target.value }
+                            })}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Section Title</label>
+                          <input 
+                            type="text" 
+                            value={textsForm.typewriter?.title || ''} 
+                            onChange={e => setTextsForm({
+                              ...textsForm,
+                              typewriter: { ...(textsForm.typewriter || {}), title: e.target.value }
+                            })}
+                          />
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label>Description</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.typewriter?.description || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            typewriter: { ...(textsForm.typewriter || {}), description: e.target.value }
+                          })}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Milestones Section */}
+                    <div className="form-sub-block mt-4">
+                      <h5 className="font-mono text-sm">Milestones Section</h5>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Kicker / Small Badge</label>
+                          <input 
+                            type="text" 
+                            value={textsForm.timeline?.kicker || ''} 
+                            onChange={e => setTextsForm({
+                              ...textsForm,
+                              timeline: { ...(textsForm.timeline || {}), kicker: e.target.value }
+                            })}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Section Title</label>
+                          <input 
+                            type="text" 
+                            value={textsForm.timeline?.title || ''} 
+                            onChange={e => setTextsForm({
+                              ...textsForm,
+                              timeline: { ...(textsForm.timeline || {}), title: e.target.value }
+                            })}
+                          />
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label>Description</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.timeline?.description || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            timeline: { ...(textsForm.timeline || {}), description: e.target.value }
+                          })}
+                        />
+                      </div>
+                    </div>
+                  </fieldset>
+
+                  {/* 4. Footer Texts */}
+                  <fieldset className="form-fieldset">
+                    <legend className="font-mono text-gold">4. FOOTER TEXTS & COPYRIGHT</legend>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Footer Brand Name</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.footer?.brandName || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            footer: { ...(textsForm.footer || {}), brandName: e.target.value }
+                          })}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Footer Subtitle</label>
+                        <input 
+                          type="text" 
+                          value={textsForm.footer?.subtitle || ''} 
+                          onChange={e => setTextsForm({
+                            ...textsForm,
+                            footer: { ...(textsForm.footer || {}), subtitle: e.target.value }
+                          })}
+                        />
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label>Copyright Line</label>
+                      <input 
+                        type="text" 
+                        value={textsForm.footer?.copyright || ''} 
+                        onChange={e => setTextsForm({
+                          ...textsForm,
+                          footer: { ...(textsForm.footer || {}), copyright: e.target.value }
+                        })}
+                      />
+                    </div>
+                  </fieldset>
+
+                  <div className="form-actions sticky-save">
+                    <button type="submit" className="btn-primary w-full">
+                      <Save size={18} /> Save & Apply All Website Texts
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* TAB 2: WRITINGS MANAGER */}
             {activeTab === 'works' && (
               <div className="admin-tab-content">
                 <div className="admin-split">
                   {/* Form */}
                   <form onSubmit={handleSaveWork} className="admin-form">
-                    <h4>{editingWorkId ? 'Edit Work' : 'Add New Literary Work'}</h4>
+                    <h4>{editingWorkId ? 'Edit Writing' : 'Add New Writing / Story'}</h4>
 
                     <div className="form-group">
                       <label>Title</label>
@@ -393,7 +919,7 @@ export default function AdminPortalModal() {
                         required 
                         value={workForm.title} 
                         onChange={e => setWorkForm({...workForm, title: e.target.value})}
-                        placeholder="e.g. Algorithmic Hauntology in Synthetic Poetry"
+                        placeholder="e.g. The Spoon"
                       />
                     </div>
 
@@ -404,34 +930,31 @@ export default function AdminPortalModal() {
                           value={workForm.category}
                           onChange={e => setWorkForm({...workForm, category: e.target.value})}
                         >
-                          <option value="Essay">Essay</option>
-                          <option value="Critical Review">Critical Review</option>
                           <option value="Poetry">Poetry</option>
-                          <option value="Short Story">Short Story</option>
+                          <option value="Story">Story</option>
+                          <option value="Memoir">Memoir</option>
+                          <option value="Essay">Essay</option>
                         </select>
                       </div>
 
                       <div className="form-group">
                         <label>Topic Tag</label>
-                        <select 
+                        <input 
+                          type="text"
                           value={workForm.topicTag}
                           onChange={e => setWorkForm({...workForm, topicTag: e.target.value})}
-                        >
-                          <option value="Digital Humanities">Digital Humanities</option>
-                          <option value="Comparative Lit">Comparative Lit</option>
-                          <option value="Modern Poetics">Modern Poetics</option>
-                          <option value="Victorian & Modernism">Victorian & Modernism</option>
-                        </select>
+                          placeholder="e.g. Constellations & Family"
+                        />
                       </div>
                     </div>
 
                     <div className="form-row">
                       <div className="form-group">
-                        <label>Publication Venue</label>
+                        <label>Date / Subtitle</label>
                         <input 
                           type="text" 
-                          value={workForm.publication}
-                          onChange={e => setWorkForm({...workForm, publication: e.target.value})}
+                          value={workForm.date}
+                          onChange={e => setWorkForm({...workForm, date: e.target.value})}
                         />
                       </div>
                       <div className="form-group">
@@ -445,495 +968,55 @@ export default function AdminPortalModal() {
                     </div>
 
                     <div className="form-group">
-                      <label>Excerpt / Abstract</label>
-                      <textarea 
-                        rows={2} 
-                        value={workForm.excerpt}
-                        onChange={e => setWorkForm({...workForm, excerpt: e.target.value})}
-                        placeholder="Brief summary displayed on work cards..."
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>Full Content (Markdown Format)</label>
-                      <textarea 
-                        rows={6} 
-                        required 
-                        value={workForm.content}
-                        onChange={e => setWorkForm({...workForm, content: e.target.value})}
-                        placeholder="Write full text, headings (###), quotes (>)..."
-                      />
-                    </div>
-
-                    {/* Annotation Note Builder */}
-                    <div className="annotation-builder-box">
-                      <label className="text-xs font-mono font-bold text-gold">Add Interactive Margin Annotation</label>
-                      <div className="form-row mt-1">
-                        <input 
-                          type="text" 
-                          placeholder="Phrase to highlight (exact text)"
-                          value={annoPhrase}
-                          onChange={e => setAnnoPhrase(e.target.value)}
-                        />
-                        <input 
-                          type="text" 
-                          placeholder="Margin note explanation"
-                          value={annoNote}
-                          onChange={e => setAnnoNote(e.target.value)}
-                        />
-                        <button type="button" onClick={handleAddAnnotation} className="btn-secondary">
-                          <Plus size={14} /> Add
-                        </button>
-                      </div>
-
-                      {workForm.annotations && workForm.annotations.length > 0 && (
-                        <ul className="anno-list mt-2">
-                          {workForm.annotations.map((a, i) => (
-                            <li key={i} className="anno-list-item">
-                              <span><strong>"{a.phrase}"</strong>: {a.note}</span>
-                              <button type="button" onClick={() => handleRemoveAnnotation(i)} className="text-red-400">
-                                <Trash2 size={12} />
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-
-                    <div className="form-checkbox">
-                      <input 
-                        type="checkbox" 
-                        id="featuredCheck"
-                        checked={workForm.featured}
-                        onChange={e => setWorkForm({...workForm, featured: e.target.checked})}
-                      />
-                      <label htmlFor="featuredCheck">Feature this work in Hero Reader Mode</label>
-                    </div>
-
-                    <div className="form-actions">
-                      <button type="submit" className="btn-primary">
-                        <Save size={16} /> {editingWorkId ? 'Update Work' : 'Publish Work'}
-                      </button>
-                      {editingWorkId && (
-                        <button 
-                          type="button" 
-                          className="btn-ghost" 
-                          onClick={() => {
-                            setEditingWorkId(null);
-                            setWorkForm({
-                              title: '', category: 'Essay', topicTag: 'Digital Humanities', publication: '', date: '2026', excerpt: '', readTime: '5 min read', sentiment: 'Analytical', complexityScore: '85/100', featured: false, content: '', annotations: []
-                            });
-                          }}
-                        >
-                          Cancel Edit
-                        </button>
-                      )}
-                    </div>
-                  </form>
-
-                  {/* List of existing works */}
-                  <div className="admin-list">
-                    <h4>Published Works ({data.works.length})</h4>
-                    <div className="list-items">
-                      {data.works.map(w => (
-                        <div key={w.id} className="admin-item-card">
-                          <div className="item-info">
-                            <strong>{w.title}</strong>
-                            <span className="item-meta">{w.category} • {w.publication}</span>
-                          </div>
-                          <div className="item-controls">
-                            <button onClick={() => handleEditWorkClick(w)} className="btn-icon">
-                              <Edit3 size={14} />
-                            </button>
-                            <button onClick={() => {
-                              if (confirm(`Delete "${w.title}"?`)) deleteWork(w.id);
-                            }} className="btn-icon text-red-400">
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Tab 2: Bookshelf Manager */}
-            {activeTab === 'bookshelf' && (
-              <div className="admin-tab-content">
-                <div className="admin-split">
-                  <form onSubmit={handleSaveBook} className="admin-form">
-                    <h4>Add Book to Reading Matrix</h4>
-                    
-                    <div className="form-group">
-                      <label>Book Title</label>
-                      <input 
-                        type="text" 
-                        required 
-                        value={bookForm.title}
-                        onChange={e => setBookForm({...bookForm, title: e.target.value})}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>Author</label>
-                      <input 
-                        type="text" 
-                        required 
-                        value={bookForm.author}
-                        onChange={e => setBookForm({...bookForm, author: e.target.value})}
-                      />
-                    </div>
-
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Status</label>
-                        <select 
-                          value={bookForm.status}
-                          onChange={e => setBookForm({...bookForm, status: e.target.value})}
-                        >
-                          <option value="Currently Reading">Currently Reading</option>
-                          <option value="Finished">Finished</option>
-                          <option value="Plan to Read">Plan to Read</option>
-                        </select>
-                      </div>
-
-                      <div className="form-group">
-                        <label>Progress (%)</label>
-                        <input 
-                          type="number" 
-                          min="0" 
-                          max="100" 
-                          value={bookForm.progress}
-                          onChange={e => setBookForm({...bookForm, progress: parseInt(e.target.value) || 0})}
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label>Rating (1-5)</label>
-                        <input 
-                          type="number" 
-                          step="0.5" 
-                          min="1" 
-                          max="5" 
-                          value={bookForm.rating}
-                          onChange={e => setBookForm({...bookForm, rating: parseFloat(e.target.value) || 5})}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="form-group">
-                      <label>Curator Note / Review</label>
-                      <textarea 
-                        rows={3}
-                        value={bookForm.notes}
-                        onChange={e => setBookForm({...bookForm, notes: e.target.value})}
-                        placeholder="Key insights and critical reflections..."
-                      />
-                    </div>
-
-                    <button type="submit" className="btn-primary">
-                      <Plus size={16} /> Add to Bookshelf
-                    </button>
-                  </form>
-
-                  <div className="admin-list">
-                    <h4>Bookshelf Items ({data.bookshelf.length})</h4>
-                    <div className="list-items">
-                      {data.bookshelf.map(b => (
-                        <div key={b.id} className="admin-item-card">
-                          <div className="item-info">
-                            <strong>{b.title}</strong>
-                            <span className="item-meta">by {b.author} • {b.progress}% ({b.status})</span>
-                          </div>
-                          <button onClick={() => deleteBook(b.id)} className="btn-icon text-red-400">
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Tab 3: Profile Editor */}
-            {activeTab === 'profile' && (
-              <div className="admin-tab-content">
-                <form onSubmit={handleSaveProfile} className="admin-form max-w-2xl">
-                  <h4>Edit Author Profile & Metadata</h4>
-                  
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Full Name</label>
-                      <input 
-                        type="text" 
-                        value={profileForm.name}
-                        onChange={e => setProfileForm({...profileForm, name: e.target.value})}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>University / Affiliation</label>
-                      <input 
-                        type="text" 
-                        value={profileForm.university}
-                        onChange={e => setProfileForm({...profileForm, university: e.target.value})}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Academic Title</label>
-                    <input 
-                      type="text" 
-                      value={profileForm.title}
-                      onChange={e => setProfileForm({...profileForm, title: e.target.value})}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Status Badge Text</label>
-                    <input 
-                      type="text" 
-                      value={profileForm.statusBadge}
-                      onChange={e => setProfileForm({...profileForm, statusBadge: e.target.value})}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Hero Tagline</label>
-                    <textarea 
-                      rows={2}
-                      value={profileForm.tagline}
-                      onChange={e => setProfileForm({...profileForm, tagline: e.target.value})}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Full Biography</label>
-                    <textarea 
-                      rows={4}
-                      value={profileForm.bio}
-                      onChange={e => setProfileForm({...profileForm, bio: e.target.value})}
-                    />
-                  </div>
-
-                  <button type="submit" className="btn-primary">
-                    <Save size={16} /> Save Profile Settings
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {/* Tab 4: Accolades Manager */}
-            {activeTab === 'accolades' && (
-              <div className="admin-tab-content">
-                <div className="admin-split">
-                  <form onSubmit={handleSaveAccolade} className="admin-form">
-                    <h4>Add Accolade or Publication</h4>
-                    
-                    <div className="form-group">
-                      <label>Year</label>
-                      <input 
-                        type="text" 
-                        value={accForm.year}
-                        onChange={e => setAccForm({...accForm, year: e.target.value})}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>Honor Title</label>
-                      <input 
-                        type="text" 
-                        required
-                        value={accForm.title}
-                        onChange={e => setAccForm({...accForm, title: e.target.value})}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>Institution / Publisher</label>
-                      <input 
-                        type="text" 
-                        required
-                        value={accForm.institution}
-                        onChange={e => setAccForm({...accForm, institution: e.target.value})}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>Description</label>
+                      <label>Excerpt / Short Summary</label>
                       <textarea 
                         rows={2}
-                        value={accForm.description}
-                        onChange={e => setAccForm({...accForm, description: e.target.value})}
-                      />
-                    </div>
-
-                    <button type="submit" className="btn-primary">
-                      <Plus size={16} /> Add Accolade
-                    </button>
-                  </form>
-
-                  <div className="admin-list">
-                    <h4>Academic Honors ({data.accolades.length})</h4>
-                    <div className="list-items">
-                      {data.accolades.map(acc => (
-                        <div key={acc.id} className="admin-item-card">
-                          <div className="item-info">
-                            <strong>{acc.title}</strong>
-                            <span className="item-meta">{acc.year} • {acc.institution}</span>
-                          </div>
-                          <button onClick={() => deleteAccolade(acc.id)} className="btn-icon text-red-400">
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Tab: Gothic Art Gallery Manager */}
-            {activeTab === 'gallery' && (
-              <div className="admin-tab-content">
-                {/* Carousel Interval Controls */}
-                <div className="gallery-timer-settings-card mb-4">
-                  <form onSubmit={handleSaveGalleryInterval} className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <Sparkles size={16} className="text-gold" />
-                      <div>
-                        <strong>Carousel Auto-Slide Speed</strong>
-                        <p className="text-xs text-muted">Time before rotating to next artwork automatically.</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="number" 
-                        min="2" 
-                        max="60" 
-                        value={galleryIntervalInput}
-                        onChange={e => setGalleryIntervalInput(e.target.value)}
-                        className="w-20 text-center font-mono"
-                      />
-                      <span className="text-xs font-mono">seconds</span>
-                      <button type="submit" className="btn-secondary text-xs">
-                        Save Speed
-                      </button>
-                    </div>
-                  </form>
-                </div>
-
-                <div className="admin-split">
-                  {/* Artwork Form */}
-                  <form onSubmit={handleSaveGalleryItem} className="admin-form">
-                    <h4>{editingGalleryId ? 'Edit Artwork' : 'Add Artwork to Gallery'}</h4>
-
-                    <div className="form-group">
-                      <label>Artwork Title</label>
-                      <input 
-                        type="text" 
-                        required 
-                        value={galleryForm.title} 
-                        onChange={e => setGalleryForm({...galleryForm, title: e.target.value})}
-                        placeholder="e.g. Wanderer Above the Sea of Fog"
-                      />
-                    </div>
-
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Artist / Scribe</label>
-                        <input 
-                          type="text" 
-                          required 
-                          value={galleryForm.artist} 
-                          onChange={e => setGalleryForm({...galleryForm, artist: e.target.value})}
-                          placeholder="e.g. Caspar David Friedrich"
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Year / Era</label>
-                        <input 
-                          type="text" 
-                          value={galleryForm.year} 
-                          onChange={e => setGalleryForm({...galleryForm, year: e.target.value})}
-                          placeholder="e.g. 1818"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="form-group">
-                      <label>Art Movement / Style</label>
-                      <input 
-                        type="text" 
-                        value={galleryForm.movement} 
-                        onChange={e => setGalleryForm({...galleryForm, movement: e.target.value})}
-                        placeholder="e.g. German Gothic Romanticism"
+                        value={workForm.excerpt}
+                        onChange={e => setWorkForm({...workForm, excerpt: e.target.value})}
+                        placeholder="Brief summary shown on the card..."
                       />
                     </div>
 
                     <div className="form-group">
-                      <label>Image URL (High-Res Public Domain)</label>
-                      <input 
-                        type="url" 
-                        required 
-                        value={galleryForm.imageUrl} 
-                        onChange={e => setGalleryForm({...galleryForm, imageUrl: e.target.value})}
-                        placeholder="https://..."
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>Curatorial Literary Commentary & Analysis</label>
+                      <label>Full Content (Poems preserve exact line breaks)</label>
                       <textarea 
-                        rows={3} 
-                        value={galleryForm.description} 
-                        onChange={e => setGalleryForm({...galleryForm, description: e.target.value})}
-                        placeholder="Literary critique, aesthetic significance, or thematic context..."
+                        rows={10}
+                        required
+                        value={workForm.content}
+                        onChange={e => setWorkForm({...workForm, content: e.target.value})}
+                        placeholder="Enter the complete text..."
+                        className="font-serif"
                       />
                     </div>
 
                     <div className="form-actions">
                       <button type="submit" className="btn-primary">
-                        <Save size={16} /> {editingGalleryId ? 'Update Artwork' : 'Add to Gallery'}
+                        <Save size={16} /> {editingWorkId ? 'Save Changes' : 'Publish Writing'}
                       </button>
-                      {editingGalleryId && (
-                        <button 
-                          type="button" 
-                          className="btn-ghost" 
-                          onClick={() => {
-                            setEditingGalleryId(null);
-                            setGalleryForm({ title: '', artist: '', year: '1888', movement: 'Gothic Romanticism', imageUrl: '', description: '' });
-                          }}
-                        >
+                      {editingWorkId && (
+                        <button type="button" className="btn-ghost" onClick={resetWorkForm}>
                           Cancel
                         </button>
                       )}
                     </div>
                   </form>
 
-                  {/* Artwork List */}
-                  <div className="admin-list">
-                    <h4>Artworks in Carousel ({(data.gothicGallery || []).length})</h4>
-                    <div className="list-items">
-                      {(data.gothicGallery || []).map(art => (
-                        <div key={art.id} className="admin-item-card">
-                          <img src={art.imageUrl} alt={art.title} className="w-12 h-12 object-cover rounded" />
-                          <div className="item-info flex-1 ml-2">
-                            <strong>{art.title}</strong>
-                            <span className="item-meta">{art.artist} ({art.year}) • {art.movement}</span>
+                  {/* List */}
+                  <div className="admin-list-pane">
+                    <h4>All Published Writings ({data.works?.length || 0})</h4>
+                    <div className="admin-cards-scroll">
+                      {data.works?.map(w => (
+                        <div key={w.id} className="admin-item-card">
+                          <div>
+                            <div className="admin-item-title font-serif">{w.title}</div>
+                            <div className="admin-item-sub font-mono">{w.category} · {w.readTime}</div>
                           </div>
-                          <div className="item-controls">
-                            <button onClick={() => handleEditGalleryClick(art)} className="btn-icon">
-                              <Edit3 size={14} />
+                          <div className="admin-item-actions">
+                            <button onClick={() => handleEditWorkClick(w)} className="icon-action-btn" title="Edit">
+                              <Edit3 size={15} />
                             </button>
-                            <button onClick={() => {
-                              if (confirm(`Delete "${art.title}"?`)) deleteGalleryItem(art.id);
-                            }} className="btn-icon text-red-400">
-                              <Trash2 size={14} />
+                            <button onClick={() => deleteWork(w.id)} className="icon-action-btn text-red-400" title="Delete">
+                              <Trash2 size={15} />
                             </button>
                           </div>
                         </div>
@@ -944,40 +1027,539 @@ export default function AdminPortalModal() {
               </div>
             )}
 
-            {/* Tab: Data & Backup */}
-            {activeTab === 'data' && (
+            {/* TAB 3: VISUAL GALLERY */}
+            {activeTab === 'gallery' && (
               <div className="admin-tab-content">
-                <div className="backup-controls-grid">
-                  <div className="backup-card">
-                    <h4>Export Portfolio Backup</h4>
-                    <p>Download the complete live dataset (works, annotations, bookshelf, bio, accolades) as a clean `.json` file.</p>
-                    <button onClick={handleExportJson} className="btn-primary">
-                      <Download size={16} /> Export JSON Data
+                {/* Carousel Animation Timing Setting */}
+                <form onSubmit={handleSaveGallerySettings} className="admin-form mb-4 full-width">
+                  <div className="flex justify-between items-center flex-wrap gap-2">
+                    <h4 className="flex items-center gap-2 text-base">
+                      <Clock size={16} /> Carousel Slide Timing & Autoplay
+                    </h4>
+                    <button type="submit" className="btn-secondary text-xs">
+                      <Save size={14} /> Apply Slide Timing
+                    </button>
+                  </div>
+                  <div className="form-row items-center">
+                    <div className="form-group flex-1">
+                      <label>Slide Duration ({galleryTimingForm.intervalSeconds || 5} seconds per slide)</label>
+                      <input 
+                        type="range" 
+                        min={2} 
+                        max={30} 
+                        step={1}
+                        value={galleryTimingForm.intervalSeconds || 5} 
+                        onChange={e => setGalleryTimingForm({
+                          ...galleryTimingForm, 
+                          intervalSeconds: parseInt(e.target.value) || 5 
+                        })}
+                      />
+                    </div>
+                    <div className="form-group pt-4">
+                      <label className="flex items-center gap-2 cursor-pointer text-sm">
+                        <input 
+                          type="checkbox" 
+                          checked={galleryTimingForm.autoPlay !== false} 
+                          onChange={e => setGalleryTimingForm({
+                            ...galleryTimingForm, 
+                            autoPlay: e.target.checked 
+                          })}
+                        />
+                        <span>Enable Automatic Slide Advancement</span>
+                      </label>
+                    </div>
+                  </div>
+                </form>
+
+                <div className="admin-split">
+                  <form onSubmit={handleSaveGallery} className="admin-form">
+                    <h4>{editingGalleryId ? 'Edit Artwork / Scene' : 'Add New Artwork / Scene'}</h4>
+                    <div className="form-group">
+                      <label>Scene Title</label>
+                      <input 
+                        type="text" 
+                        required 
+                        value={galleryForm.title} 
+                        onChange={e => setGalleryForm({...galleryForm, title: e.target.value})}
+                        placeholder="e.g. Moonlight Over Rooftops"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Artwork Image (Upload from Device or paste URL)</label>
+                      <div className="flex gap-2 items-center mb-2">
+                        <label className="btn-secondary cursor-pointer text-xs flex items-center gap-1">
+                          <Upload size={14} /> {uploadingImage ? 'Optimizing...' : 'Upload Photo from Device'}
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={handleImageUpload} 
+                            style={{ display: 'none' }} 
+                            disabled={uploadingImage}
+                          />
+                        </label>
+                        <span className="text-muted text-xs">or enter web URL</span>
+                      </div>
+                      <input 
+                        type="text" 
+                        required 
+                        value={galleryForm.imageUrl} 
+                        onChange={e => setGalleryForm({...galleryForm, imageUrl: e.target.value})}
+                        placeholder="https://... or uploaded image data"
+                      />
+                      {galleryForm.imageUrl && (
+                        <div className="mt-2 p-2 border border-border rounded bg-surface flex items-center gap-3">
+                          <img src={galleryForm.imageUrl} alt="Preview" className="w-14 h-14 object-cover rounded" />
+                          <span className="text-xs text-muted">Image ready</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Scene / Mood Tag</label>
+                        <input 
+                          type="text" 
+                          value={galleryForm.movement} 
+                          onChange={e => setGalleryForm({...galleryForm, movement: e.target.value})}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Artist / Location (Optional)</label>
+                        <input 
+                          type="text" 
+                          value={galleryForm.artist || ''} 
+                          onChange={e => setGalleryForm({...galleryForm, artist: e.target.value})}
+                          placeholder="Optional"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Description / Caption Quote</label>
+                      <textarea 
+                        rows={3}
+                        value={galleryForm.description}
+                        onChange={e => setGalleryForm({...galleryForm, description: e.target.value})}
+                      />
+                    </div>
+
+                    <div className="form-actions">
+                      <button type="submit" className="btn-primary">
+                        <Save size={16} /> {editingGalleryId ? 'Update Item' : 'Add to Gallery'}
+                      </button>
+                      {editingGalleryId && (
+                        <button type="button" className="btn-ghost" onClick={() => {
+                          setEditingGalleryId(null);
+                          setGalleryForm({ title: '', artist: '', year: '2026', movement: 'Visual Mood', imageUrl: '', description: '' });
+                        }}>
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                  </form>
+
+                  <div className="admin-list-pane">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4>Curated Scenes ({data.gothicGallery?.length || 0})</h4>
+                      <span className="text-xs text-muted">Use ↑ ↓ to rearrange order</span>
+                    </div>
+                    <div className="admin-cards-scroll">
+                      {data.gothicGallery?.map((g, idx) => (
+                        <div key={g.id || idx} className="admin-item-card">
+                          <div className="flex items-center gap-3">
+                            <img src={g.imageUrl} alt="" className="w-10 h-10 object-cover rounded" />
+                            <div>
+                              <div className="admin-item-title font-serif">{g.title}</div>
+                              <div className="admin-item-sub font-mono">#{idx + 1} · {g.movement}</div>
+                            </div>
+                          </div>
+                          <div className="admin-item-actions">
+                            <button 
+                              disabled={idx === 0} 
+                              onClick={() => moveGalleryItem(idx, -1)} 
+                              className="icon-action-btn"
+                              title="Move Up"
+                            >
+                              <ArrowUp size={14} />
+                            </button>
+                            <button 
+                              disabled={idx === (data.gothicGallery?.length || 0) - 1} 
+                              onClick={() => moveGalleryItem(idx, 1)} 
+                              className="icon-action-btn"
+                              title="Move Down"
+                            >
+                              <ArrowDown size={14} />
+                            </button>
+                            <button onClick={() => { setEditingGalleryId(g.id); setGalleryForm(g); }} className="icon-action-btn" title="Edit">
+                              <Edit3 size={15} />
+                            </button>
+                            <button onClick={() => deleteGalleryItem(g.id)} className="icon-action-btn text-red-400" title="Delete">
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: BOOKSHELF */}
+            {activeTab === 'bookshelf' && (
+              <div className="admin-tab-content">
+                <div className="admin-split">
+                  <form onSubmit={handleSaveBook} className="admin-form">
+                    <h4>Add / Edit Book</h4>
+                    <div className="form-group">
+                      <label>Book Title</label>
+                      <input 
+                        type="text" 
+                        required 
+                        value={bookForm.title} 
+                        onChange={e => setBookForm({...bookForm, title: e.target.value})}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Author</label>
+                      <input 
+                        type="text" 
+                        required 
+                        value={bookForm.author} 
+                        onChange={e => setBookForm({...bookForm, author: e.target.value})}
+                      />
+                    </div>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Status</label>
+                        <select 
+                          value={bookForm.status} 
+                          onChange={e => setBookForm({...bookForm, status: e.target.value})}
+                        >
+                          <option value="Finished">Finished</option>
+                          <option value="Currently Reading">Currently Reading</option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>Spine Gradient</label>
+                        <select 
+                          value={bookForm.coverColor} 
+                          onChange={e => setBookForm({...bookForm, coverColor: e.target.value})}
+                        >
+                          <option value="from-amber-900 to-stone-900">Amber & Stone</option>
+                          <option value="from-emerald-950 to-stone-900">Deep Emerald</option>
+                          <option value="from-stone-800 to-stone-950">Midnight Slate</option>
+                          <option value="from-red-950 to-stone-900">Crimson Velvet</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label>Reflection / Notes</label>
+                      <textarea 
+                        rows={3} 
+                        value={bookForm.notes} 
+                        onChange={e => setBookForm({...bookForm, notes: e.target.value})}
+                      />
+                    </div>
+                    <button type="submit" className="btn-primary">
+                      <Save size={16} /> Save Book
+                    </button>
+                  </form>
+
+                  <div className="admin-list-pane">
+                    <h4>Bookshelf ({data.bookshelf?.length || 0})</h4>
+                    <div className="admin-cards-scroll">
+                      {data.bookshelf?.map(b => (
+                        <div key={b.id} className="admin-item-card">
+                          <div>
+                            <div className="admin-item-title font-serif">{b.title}</div>
+                            <div className="admin-item-sub font-mono">{b.author} · {b.status}</div>
+                          </div>
+                          <div className="admin-item-actions">
+                            <button onClick={() => deleteBook(b.id)} className="icon-action-btn text-red-400">
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 5: MILESTONES / TIMELINE */}
+            {activeTab === 'accolades' && (
+              <div className="admin-tab-content">
+                <div className="admin-split">
+                  <form onSubmit={handleAddAccolade} className="admin-form">
+                    <h4>Add Writing Milestone</h4>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Year / Date</label>
+                        <input 
+                          type="text" 
+                          required 
+                          value={accForm.year} 
+                          onChange={e => setAccForm({...accForm, year: e.target.value})}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Location / Context</label>
+                        <input 
+                          type="text" 
+                          required 
+                          value={accForm.institution} 
+                          onChange={e => setAccForm({...accForm, institution: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label>Milestone Title</label>
+                      <input 
+                        type="text" 
+                        required 
+                        value={accForm.title} 
+                        onChange={e => setAccForm({...accForm, title: e.target.value})}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Description</label>
+                      <textarea 
+                        rows={3} 
+                        value={accForm.description} 
+                        onChange={e => setAccForm({...accForm, description: e.target.value})}
+                      />
+                    </div>
+                    <button type="submit" className="btn-primary">
+                      <Plus size={16} /> Add Milestone
+                    </button>
+                  </form>
+
+                  <div className="admin-list-pane">
+                    <h4>Timeline Milestones ({data.accolades?.length || 0})</h4>
+                    <div className="admin-cards-scroll">
+                      {data.accolades?.map(a => (
+                        <div key={a.id} className="admin-item-card">
+                          <div>
+                            <div className="admin-item-title font-serif">{a.title} ({a.year})</div>
+                            <div className="admin-item-sub font-mono">{a.institution}</div>
+                          </div>
+                          <button onClick={() => deleteAccolade(a.id)} className="icon-action-btn text-red-400">
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 6: PROFILE & SOCIALS */}
+            {activeTab === 'profile' && (
+              <div className="admin-tab-content">
+                <form onSubmit={handleSaveProfile} className="admin-form full-width">
+                  <h4>Author Profile & Socials</h4>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Author / Brand Name</label>
+                      <input 
+                        type="text" 
+                        value={profileForm.name || ''} 
+                        onChange={e => setProfileForm({...profileForm, name: e.target.value})}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Subtitle / Title</label>
+                      <input 
+                        type="text" 
+                        value={profileForm.title || ''} 
+                        onChange={e => setProfileForm({...profileForm, title: e.target.value})}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Location / Cities</label>
+                      <input 
+                        type="text" 
+                        value={profileForm.university || ''} 
+                        onChange={e => setProfileForm({...profileForm, university: e.target.value})}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Contact Email</label>
+                      <input 
+                        type="email" 
+                        value={profileForm.email || ''} 
+                        onChange={e => setProfileForm({...profileForm, email: e.target.value})}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Author Bio</label>
+                    <textarea 
+                      rows={3} 
+                      value={profileForm.bio || ''} 
+                      onChange={e => setProfileForm({...profileForm, bio: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Substack URL</label>
+                      <input 
+                        type="url" 
+                        value={profileForm.socials?.substack || ''} 
+                        onChange={e => setProfileForm({
+                          ...profileForm, 
+                          socials: { ...(profileForm.socials || {}), substack: e.target.value }
+                        })}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Twitter / X URL</label>
+                      <input 
+                        type="url" 
+                        value={profileForm.socials?.twitter || ''} 
+                        onChange={e => setProfileForm({
+                          ...profileForm, 
+                          socials: { ...(profileForm.socials || {}), twitter: e.target.value }
+                        })}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>GitHub URL</label>
+                      <input 
+                        type="url" 
+                        value={profileForm.socials?.github || ''} 
+                        onChange={e => setProfileForm({
+                          ...profileForm, 
+                          socials: { ...(profileForm.socials || {}), github: e.target.value }
+                        })}
+                      />
+                    </div>
+                  </div>
+
+                  <button type="submit" className="btn-primary mt-4">
+                    <Save size={16} /> Save Profile Settings
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* TAB 7: GLOBAL LIVE SYNC & DEPLOYMENT */}
+            {activeTab === 'sync' && (
+              <div className="admin-tab-content">
+                <div className="data-management-grid">
+                  <div className="data-card border-gold">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="flex items-center gap-2 text-gold">
+                        <Globe size={18} /> Global Live Visitor Sync
+                      </h4>
+                      <span className={`px-2 py-1 text-xs rounded font-mono ${cloudSyncStatus === 'success' ? 'bg-emerald-800 text-emerald-100' : 'bg-amber-900 text-amber-100'}`}>
+                        {cloudSyncStatus === 'success' ? '● LIVE SYNCED' : '● READY TO SYNC'}
+                      </span>
+                    </div>
+                    <p className="text-muted text-sm my-2">
+                      Push your latest writings, gallery photos, and website texts so every visitor worldwide sees them instantly without needing to redeploy!
+                    </p>
+                    <button onClick={triggerManualCloudSync} className="btn-primary mt-3">
+                      <Globe size={16} /> Push Live to All Global Visitors Now
                     </button>
                   </div>
 
-                  <div className="backup-card">
-                    <h4>Import Dataset</h4>
-                    <p>Upload a previously exported `.json` portfolio file to restore your customized state.</p>
-                    <label className="btn-secondary cursor-pointer">
-                      <Upload size={16} /> Choose File & Import
-                      <input type="file" accept=".json" onChange={handleImportJson} className="hidden" />
-                    </label>
+                  <div className="data-card">
+                    <h4>1-Click Static Repository Export (`initialData.js`)</h4>
+                    <p className="text-muted text-sm my-2">
+                      Want 100% static, permanent deployments on Vercel, Netlify, or GitHub Pages with zero external dependencies? Download your updated code file!
+                    </p>
+                    <button onClick={handleExportCodeFile} className="btn-secondary mt-2">
+                      <Download size={16} /> Download `initialData.js` Code File
+                    </button>
                   </div>
 
-                  <div className="backup-card border-red-900/40">
-                    <h4 className="text-red-400">Reset to Default Data</h4>
-                    <p>Wipe local modifications and reload the original 2026 Harvard Comparative Lit sample portfolio.</p>
+                  <div className="data-card">
+                    <h4>Cloud Database Sync Configuration</h4>
+                    <p className="text-muted text-sm my-2">
+                      Connect your Google Firebase Firestore or custom cloud store for automatic real-time sync.
+                    </p>
+                    <form onSubmit={handleSaveCloudConfig} className="mt-3 flex flex-col gap-2">
+                      <div className="form-group">
+                        <label>Sync Mode</label>
+                        <select 
+                          value={cloudConfigForm.syncMode}
+                          onChange={e => setCloudConfigForm({...cloudConfigForm, syncMode: e.target.value})}
+                        >
+                          <option value="cloud">Cloud JSON Store (JSONBin / REST)</option>
+                          <option value="firebase">Google Firebase Firestore</option>
+                        </select>
+                      </div>
+                      {cloudConfigForm.syncMode === 'firebase' ? (
+                        <div className="form-group">
+                          <label>Firebase Project ID</label>
+                          <input 
+                            type="text" 
+                            value={cloudConfigForm.firebaseProjectId || ''} 
+                            onChange={e => setCloudConfigForm({...cloudConfigForm, firebaseProjectId: e.target.value})}
+                            placeholder="e.g. portfolio-2026-xyz"
+                          />
+                        </div>
+                      ) : (
+                        <div className="form-group">
+                          <label>JSONBin Bin ID</label>
+                          <input 
+                            type="text" 
+                            value={cloudConfigForm.binId || ''} 
+                            onChange={e => setCloudConfigForm({...cloudConfigForm, binId: e.target.value})}
+                            placeholder="e.g. 660f..."
+                          />
+                        </div>
+                      )}
+                      <button type="submit" className="btn-secondary text-xs mt-2">
+                        <Save size={14} /> Save Cloud Config
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 8: BACKUP & DATA */}
+            {activeTab === 'data' && (
+              <div className="admin-tab-content">
+                <div className="data-management-grid">
+                  <div className="data-card">
+                    <h4>Export Backup</h4>
+                    <p className="text-muted text-sm my-2">Download a complete JSON copy of all website texts, works, books, and images.</p>
+                    <button onClick={handleExportData} className="btn-secondary">
+                      <Download size={16} /> Export JSON File
+                    </button>
+                  </div>
+
+                  <div className="data-card">
+                    <h4>Import Backup</h4>
+                    <p className="text-muted text-sm my-2">Restore or load an entire dataset from an exported JSON file.</p>
+                    <input type="file" accept=".json" onChange={handleImportFile} className="my-2 text-xs" />
+                  </div>
+
+                  <div className="data-card border-red-500">
+                    <h4 className="text-red-400">Reset to Defaults</h4>
+                    <p className="text-muted text-sm my-2">Reset all texts and works back to original initial values.</p>
                     <button 
                       onClick={() => {
-                        if (confirm('Are you sure you want to reset all portfolio data to default?')) {
+                        if (confirm("Are you sure you want to reset all data back to original state?")) {
                           resetToDefault();
-                          showToast('Reset to original default portfolio state.');
+                          showToast("Reset to defaults successfully.");
                         }
                       }} 
-                      className="btn-danger"
+                      className="btn-ghost text-red-400"
                     >
-                      <RotateCcw size={16} /> Reset Default State
+                      <RotateCcw size={16} /> Reset Everything
                     </button>
                   </div>
                 </div>

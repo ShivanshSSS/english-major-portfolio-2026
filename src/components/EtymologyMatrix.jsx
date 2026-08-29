@@ -10,11 +10,11 @@ export default function EtymologyMatrix() {
   const [copied, setCopied] = useState(false);
 
   const concepts = [
-    { title: "Algorithmic Post-Humanism", desc: "How agency operates when text is co-created by autonomous agents." },
-    { title: "Synthetic Elegies", desc: "Poetic mourning constructed through vector similarity in neural models." },
-    { title: "Digital Gothic", desc: "The haunting return of 19th-century romantic tropes in dark-mode UIs." },
-    { title: "Hermeneutic Audits", desc: "Rigorous linguistic critique of high-parameter generative outputs." },
-    { title: "Temporal Dislocation", desc: "Collapsing Renaissance incunabula with 2026 sublingual code." }
+    { title: "The Constellation Anchor", desc: "How childhood roof stargazing of the Big Dipper ('The Spoon') becomes an enduring constant amid family separation." },
+    { title: "The Diaspora Paradox", desc: "Missing the hometown you swore never to return to, only to be perceived as an outsider upon returning." },
+    { title: "The Immortality of Love", desc: "Why love requires letting go to achieve eternity: 'To last forever, you have to let it go.'" },
+    { title: "The Lunar Connection", desc: "Shared gaze upon the moon across vast city distances connecting separated souls." },
+    { title: "The Unsent Elegy", desc: "The quiet, devastating finality of memory and grief in 'This Man I Knew' and 'None Shall Realise.'" }
   ];
 
   const handleNextQuote = () => {
@@ -34,11 +34,11 @@ export default function EtymologyMatrix() {
     <section id="matrix" className="section-container border-t border-glass">
       <div className="section-header">
         <div className="section-title-wrap">
-          <span className="section-kicker"><Sparkles size={16} /> HUMANITIES LAB</span>
-          <h2 className="section-title">ETYMOLOGY & THEORY MATRIX</h2>
+          <span className="section-kicker"><Sparkles size={16} /> LITERARY MOTIFS</span>
+          <h2 className="section-title">THEMES & PHILOSOPHICAL MATRIX</h2>
         </div>
         <p className="section-desc">
-          Interactive concept map connecting 2026 digital humanities methodologies with timeless literary theory.
+          Core thematic pillars and recurring motifs connecting the poems, essays, and stories of the manuscript collection.
         </p>
       </div>
 

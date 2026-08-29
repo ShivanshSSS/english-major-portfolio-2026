@@ -12,15 +12,17 @@ export default function Bookshelf() {
     return b.status === filterStatus;
   });
 
+  const shelfTexts = data.siteTexts?.bookshelf || {};
+
   return (
     <section id="bookshelf" className="section-container border-t border-glass">
       <div className="section-header">
         <div className="section-title-wrap">
-          <span className="section-kicker"><Layers size={16} /> LITERARY ARCHIVE</span>
-          <h2 className="section-title">THE CURATOR'S SHELF</h2>
+          <span className="section-kicker"><Layers size={16} /> {shelfTexts.kicker || "READING LIST"}</span>
+          <h2 className="section-title">{shelfTexts.title || "THE BOOKSHELF"}</h2>
         </div>
         <p className="section-desc">
-          Current reads, theoretical touchstones, and essential bibliography shaping 2026 research priorities.
+          {shelfTexts.description || "Favorite books, poetry volumes, and stories that have inspired and shaped these writings."}
         </p>
       </div>
 

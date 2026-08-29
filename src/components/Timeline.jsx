@@ -5,15 +5,17 @@ import { Feather, Award, Landmark, ExternalLink } from 'lucide-react';
 export default function Timeline() {
   const { data } = usePortfolio();
 
+  const timeTexts = data.siteTexts?.timeline || {};
+
   return (
     <section id="accolades" className="section-container border-t border-glass">
       <div className="section-header">
         <div className="section-title-wrap">
-          <span className="section-kicker"><Award size={16} /> ACADEMIC RECORD</span>
-          <h2 className="section-title">HONORS & PUBLICATIONS</h2>
+          <span className="section-kicker"><Award size={16} /> {timeTexts.kicker || "MILESTONES"}</span>
+          <h2 className="section-title">{timeTexts.title || "WRITING JOURNEY & RECOGNITION"}</h2>
         </div>
         <p className="section-desc">
-          Fellowships, editorial appointments, and national essay awards in comparative literature.
+          {timeTexts.description || "Key writing milestones, publications, and moments across recent years."}
         </p>
       </div>
 

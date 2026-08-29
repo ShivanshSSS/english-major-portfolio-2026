@@ -1,19 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { usePortfolio } from '../context/PortfolioContext';
 import { 
   BookOpen, 
   Sparkles, 
-  Volume2, 
-  VolumeX, 
   Lock, 
   ShieldCheck, 
-  Sun, 
   Moon, 
   Feather, 
   Terminal, 
   Layers 
 } from 'lucide-react';
-import { startAmbientSoundscape, stopAmbientSoundscape } from '../utils/audioSynth';
 
 export default function Navbar() {
   const { 
@@ -21,35 +17,8 @@ export default function Navbar() {
     activeTheme, 
     setActiveTheme, 
     setIsAdminOpen, 
-    isAdminAuthenticated,
-    activeAudioMode,
-    setActiveAudioMode 
+    isAdminAuthenticated
   } = usePortfolio();
-
-  const [timeString, setTimeString] = useState('');
-
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setTimeString(now.toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false }) + ' EST');
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleAudioToggle = () => {
-    if (activeAudioMode === 'none') {
-      setActiveAudioMode('rain');
-      startAmbientSoundscape('rain');
-    } else if (activeAudioMode === 'rain') {
-      setActiveAudioMode('focus');
-      startAmbientSoundscape('focus');
-    } else {
-      setActiveAudioMode('none');
-      stopAmbientSoundscape();
-    }
-  };
 
   const themeOptions = [
     { id: 'creamy-victorian', label: 'Velvet Cream', icon: Feather },
@@ -62,47 +31,25 @@ export default function Navbar() {
   return (
     <nav className="navbar-container">
       <div className="navbar-content">
-        {/* Brand */}
-        <a href="#" className="navbar-brand">
-          <div className="brand-badge">2026</div>
-          <span className="brand-title">{data.profile.name}</span>
-          <span className="brand-subtitle">// DIGITAL CODEX</span>
-        </a>
 
         {/* Center Nav Links */}
         <div className="nav-links">
           <a href="#works" className="nav-item">
-            <BookOpen className="nav-icon" /> Works
+            <BookOpen className="nav-icon" /> All Writings
+          </a>
+          <a href="#gallery" className="nav-item">
+            <Sparkles className="nav-icon" /> Gallery
           </a>
           <a href="#bookshelf" className="nav-item">
-            <Layers className="nav-icon" /> Curator's Shelf
+            <Layers className="nav-icon" /> Bookshelf
           </a>
-          <a href="#matrix" className="nav-item">
-            <Sparkles className="nav-icon" /> Etymology Matrix
-          </a>
-          <a href="#accolades" className="nav-item">
-            <Feather className="nav-icon" /> Accolades
+          <a href="#studio" className="nav-item">
+            <Feather className="nav-icon" /> Writing Desk
           </a>
         </div>
 
         {/* Right Controls */}
         <div className="nav-controls">
-          {/* Live Clock */}
-          <div className="clock-chip">
-            <span className="pulse-dot"></span>
-            {timeString || 'CAMBRIDGE, MA'}
-          </div>
-
-          {/* Soundscape Control */}
-          <button 
-            className={`sound-btn ${activeAudioMode !== 'none' ? 'active' : ''}`}
-            onClick={handleAudioToggle}
-            title={`Soundscape: ${activeAudioMode.toUpperCase()}`}
-          >
-            {activeAudioMode === 'none' ? <VolumeX size={16} /> : <Volume2 size={16} className="animate-bounce" />}
-            <span className="sound-label">{activeAudioMode === 'none' ? 'Sound' : activeAudioMode}</span>
-          </button>
-
           {/* Theme Dropdown / Buttons */}
           <div className="theme-switcher">
             {themeOptions.map((t) => {

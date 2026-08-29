@@ -1,18 +1,25 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { INITIAL_DATA } from '../data/initialData';
+import { 
+  fetchRemotePortfolioData, 
+  pushRemotePortfolioData, 
+  getCloudConfig 
+} from '../utils/cloudSync';
 
 const PortfolioContext = createContext();
 
 export function PortfolioProvider({ children }) {
   const [data, setData] = useState(() => {
     try {
-      const saved = localStorage.getItem('AURORA_PORTFOLIO_DATA_2026');
+      const saved = localStorage.getItem('MANUSCRIPTS_PORTFOLIO_DATA_V2');
       if (saved) {
         const parsed = JSON.parse(saved);
         return {
           ...INITIAL_DATA,
           ...parsed,
           profile: { ...INITIAL_DATA.profile, ...(parsed.profile || {}) },
+          siteTexts: { ...INITIAL_DATA.siteTexts, ...(parsed.siteTexts || {}) },
+          works: (parsed.works && parsed.works.length > 0) ? parsed.works : INITIAL_DATA.works,
           gothicGallery: (parsed.gothicGallery && parsed.gothicGallery.length > 0) ? parsed.gothicGallery : INITIAL_DATA.gothicGallery,
           gallerySettings: parsed.gallerySettings || INITIAL_DATA.gallerySettings
         };
@@ -23,24 +30,66 @@ export function PortfolioProvider({ children }) {
     return INITIAL_DATA;
   });
 
-  const [activeTheme, setActiveTheme] = useState('creamy-victorian'); // 'creamy-victorian', 'parchment-punk', 'midnight-ink', 'monastic-gold', 'cyber-gothic'
+  const [activeTheme, setActiveTheme] = useState(() => {
+    try {
+      const savedTheme = localStorage.getItem('AURORA_THEME_2026');
+      if (savedTheme) return savedTheme;
+    } catch (e) {}
+    return 'creamy-victorian';
+  });
   const [activeReaderWork, setActiveReaderWork] = useState(null);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [activeAudioMode, setActiveAudioMode] = useState('none'); // 'none', 'rain', 'focus'
+  const [cloudSyncStatus, setCloudSyncStatus] = useState('idle'); // 'idle', 'syncing', 'success', 'error'
 
-  // Persist to localStorage
+  // Fetch remote cloud data on startup so all visitors across devices see latest admin published changes
+  useEffect(() => {
+    async function loadCloudData() {
+      try {
+        const remoteData = await fetchRemotePortfolioData();
+        if (remoteData && (remoteData.siteTexts || remoteData.works || remoteData.gothicGallery)) {
+          setData(prev => ({
+            ...prev,
+            ...remoteData,
+            profile: { ...prev.profile, ...(remoteData.profile || {}) },
+            siteTexts: { ...prev.siteTexts, ...(remoteData.siteTexts || {}) },
+            works: (remoteData.works && remoteData.works.length > 0) ? remoteData.works : prev.works,
+            gothicGallery: (remoteData.gothicGallery && remoteData.gothicGallery.length > 0) ? remoteData.gothicGallery : prev.gothicGallery,
+            gallerySettings: remoteData.gallerySettings || prev.gallerySettings
+          }));
+          setCloudSyncStatus('success');
+        }
+      } catch (e) {
+        console.warn('Cloud sync on load failed:', e);
+      }
+    }
+    loadCloudData();
+  }, []);
+
+  // Persist to localStorage & push to Cloud if admin updated
   useEffect(() => {
     try {
-      localStorage.setItem('AURORA_PORTFOLIO_DATA_2026', JSON.stringify(data));
+      localStorage.setItem('MANUSCRIPTS_PORTFOLIO_DATA_V2', JSON.stringify(data));
+      
+      const config = getCloudConfig();
+      if (config.autoSyncOnSave && (config.binId || config.firebaseProjectId)) {
+        setCloudSyncStatus('syncing');
+        pushRemotePortfolioData(data).then(ok => {
+          setCloudSyncStatus(ok ? 'success' : 'error');
+        });
+      }
     } catch (e) {
       console.error('Failed to save to localStorage', e);
     }
   }, [data]);
 
-  // Sync theme class to root body
+  // Sync theme class to root body and persist
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', activeTheme);
+    try {
+      localStorage.setItem('AURORA_THEME_2026', activeTheme);
+    } catch (e) {}
   }, [activeTheme]);
 
   // Actions for Admin Portal
@@ -49,7 +98,7 @@ export function PortfolioProvider({ children }) {
       ...newWork,
       id: 'work-' + Date.now(),
       date: newWork.date || '2026',
-      annotations: newWork.annotations || []
+      annotations: []
     };
     setData(prev => ({
       ...prev,
@@ -96,21 +145,38 @@ export function PortfolioProvider({ children }) {
     }));
   };
 
-  const updateProfile = (newProfile) => {
+  const updateProfile = (updatedProfileFields) => {
     setData(prev => ({
       ...prev,
-      profile: { ...prev.profile, ...newProfile }
+      profile: { ...prev.profile, ...updatedProfileFields }
+    }));
+  };
+
+  const updateSiteTexts = (updatedTexts) => {
+    setData(prev => ({
+      ...prev,
+      siteTexts: {
+        ...prev.siteTexts,
+        ...updatedTexts,
+        hero: { ...(prev.siteTexts?.hero || {}), ...(updatedTexts.hero || {}) },
+        works: { ...(prev.siteTexts?.works || {}), ...(updatedTexts.works || {}) },
+        gallery: { ...(prev.siteTexts?.gallery || {}), ...(updatedTexts.gallery || {}) },
+        bookshelf: { ...(prev.siteTexts?.bookshelf || {}), ...(updatedTexts.bookshelf || {}) },
+        typewriter: { ...(prev.siteTexts?.typewriter || {}), ...(updatedTexts.typewriter || {}) },
+        timeline: { ...(prev.siteTexts?.timeline || {}), ...(updatedTexts.timeline || {}) },
+        footer: { ...(prev.siteTexts?.footer || {}), ...(updatedTexts.footer || {}) }
+      }
     }));
   };
 
   const addAccolade = (newAccolade) => {
-    const accWithId = {
+    const accoladeWithId = {
       ...newAccolade,
       id: 'acc-' + Date.now()
     };
     setData(prev => ({
       ...prev,
-      accolades: [accWithId, ...prev.accolades]
+      accolades: [accoladeWithId, ...(prev.accolades || [])]
     }));
   };
 
@@ -125,7 +191,9 @@ export function PortfolioProvider({ children }) {
   const addGalleryItem = (newItem) => {
     const itemWithId = {
       ...newItem,
-      id: 'art-' + Date.now()
+      id: 'art-' + Date.now(),
+      year: newItem.year || '2026',
+      movement: newItem.movement || 'Visual Mood'
     };
     setData(prev => ({
       ...prev,
@@ -147,6 +215,23 @@ export function PortfolioProvider({ children }) {
     }));
   };
 
+  const moveGalleryItem = (index, direction) => {
+    setData(prev => {
+      const items = [...(prev.gothicGallery || [])];
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= items.length) return prev;
+      
+      const temp = items[index];
+      items[index] = items[targetIndex];
+      items[targetIndex] = temp;
+      
+      return {
+        ...prev,
+        gothicGallery: items
+      };
+    });
+  };
+
   const updateGallerySettings = (newSettings) => {
     setData(prev => ({
       ...prev,
@@ -154,14 +239,24 @@ export function PortfolioProvider({ children }) {
     }));
   };
 
+  const triggerManualCloudSync = async () => {
+    setCloudSyncStatus('syncing');
+    const ok = await pushRemotePortfolioData(data);
+    setCloudSyncStatus(ok ? 'success' : 'error');
+    return ok;
+  };
+
   const resetToDefault = () => {
     setData(INITIAL_DATA);
-    localStorage.removeItem('AURORA_PORTFOLIO_DATA_2026');
+    localStorage.removeItem('MANUSCRIPTS_PORTFOLIO_DATA_V2');
   };
 
   const importDataset = (importedJsonData) => {
-    if (importedJsonData && importedJsonData.profile && importedJsonData.works) {
-      setData(importedJsonData);
+    if (importedJsonData && (importedJsonData.profile || importedJsonData.works || importedJsonData.siteTexts)) {
+      setData({
+        ...INITIAL_DATA,
+        ...importedJsonData
+      });
     }
   };
 
@@ -179,6 +274,8 @@ export function PortfolioProvider({ children }) {
         setIsAdminAuthenticated,
         activeAudioMode,
         setActiveAudioMode,
+        cloudSyncStatus,
+        triggerManualCloudSync,
         addWork,
         updateWork,
         deleteWork,
@@ -186,11 +283,13 @@ export function PortfolioProvider({ children }) {
         updateBook,
         deleteBook,
         updateProfile,
+        updateSiteTexts,
         addAccolade,
         deleteAccolade,
         addGalleryItem,
         updateGalleryItem,
         deleteGalleryItem,
+        moveGalleryItem,
         updateGallerySettings,
         resetToDefault,
         importDataset

@@ -10,8 +10,8 @@ export default function WorksSection() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedTopic, setSelectedTopic] = useState('All');
 
-  const categories = ['All', 'Essay', 'Critical Review', 'Poetry'];
-  const topics = ['All', 'Digital Humanities', 'Comparative Lit', 'Modern Poetics', 'Victorian & Modernism'];
+  const categories = ['All', 'Poetry', 'Memoir', 'Story', 'Essay'];
+  const topics = ['All', 'Constellations & Family', 'Hometown & Belonging', 'Philosophy of Love', 'Grief & Farewell', 'Nocturne & Inner Turmoil', 'Melancholy & Paradox'];
 
   const filteredWorks = data.works.filter(work => {
     const matchesSearch = 
@@ -25,15 +25,17 @@ export default function WorksSection() {
     return matchesSearch && matchesCategory && matchesTopic;
   });
 
+  const worksTexts = data.siteTexts?.works || {};
+
   return (
     <section id="works" className="section-container">
       <div className="section-header">
         <div className="section-title-wrap">
-          <span className="section-kicker"><BookOpen size={16} /> INDEX OF WORKS</span>
-          <h2 className="section-title">THE DIGITAL CODEX</h2>
+          <span className="section-kicker"><BookOpen size={16} /> {worksTexts.kicker || "ALL WRITINGS"}</span>
+          <h2 className="section-title">{worksTexts.title || "STORIES, POEMS & ESSAYS"}</h2>
         </div>
         <p className="section-desc">
-          Peer-reviewed essays, experimental poetry, and critical reviews investigating the evolving boundaries of language, code, and narrative aesthetics.
+          {worksTexts.description || "Browse through all 17 personal writings. Filter by category, topic, or search for any line or phrase."}
         </p>
       </div>
 
@@ -43,7 +45,7 @@ export default function WorksSection() {
           <Search size={18} className="search-icon" />
           <input
             type="text"
-            placeholder="Search by keyword, author, or concept (e.g. Derrida, Hauntology, Synth)..."
+            placeholder="Search by title, phrase, or theme (e.g. Spoon, Love, Sundar Nagar, Moon)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="search-input"

@@ -1,19 +1,22 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
+import { usePortfolio } from '../context/PortfolioContext';
 import { playTypewriterSound, playTypewriterBell, playPageFlipSound } from '../utils/audioSynth';
-import { Feather, Download, Printer, RotateCcw, Sparkles, Volume2, Type } from 'lucide-react';
+import { Feather, Download, Printer, Sparkles } from 'lucide-react';
 
 export default function TypewriterStudio() {
+  const { data } = usePortfolio();
+  const studioTexts = data.siteTexts?.typewriter || {};
+
   const [typedText, setTypedText] = useState(
-    "To the Reader in 2026,\n\nWe transcribe these thoughts upon digital parchment, where the cadence of Victorian ink meets the infinite latent space of autonomous prose.\n\n— Aurora Vane"
+    "To the Reader,\n\n“The ‘spoon’ became, overtime, a part of my family... Too many variables. Only one constant: The Spoon.”\n\n— The Spoon (Manuscript #07)"
   );
   const [paperTone, setPaperTone] = useState('aged-cream'); // 'aged-cream', 'antique-rose', 'monastic-slate'
   const [inkColor, setInkColor] = useState('black-walnut'); // 'black-walnut', 'imperial-crimson', 'prussian-blue'
-  const [copied, setCopied] = useState(false);
 
   const prompts = [
-    { label: "Gothic Letter", text: "Dearest Companion,\n\nThe moors are enveloped in thick fog tonight. The library fire crackles softly, and between the lines of this text, I hear the echo of a forgotten verse..." },
-    { label: "Algorithmic Elegy", text: "In the high-dimensional garden,\nthe transformer model dreams of autumn.\nIt calculates the cosine distance\nbetween longing and empty rooms..." },
-    { label: "Editorial Dispatch", text: "MEMORANDUM FOR THE CODEX // 2026\n\nResolved: That language is not a static museum, but a living breathing tapestry woven by human memory and neural syntax." }
+    { label: "The Spoon", text: "An old memory of me, my brother, my mother just looking at stars, as we all together, lied down on the roof.\nShe told me, for I was 8, about the “Big Dipper”. Everyday we’ll go up there and I’ll just be dazzled by this “spoon” hanging in the sky." },
+    { label: "Roots", text: "“Mandi jaa rha mai toh, aap kidhar?”\n\nI replied, in the thickest Mandyali accent I could bring out:\n“Ghar haaya tithe ta mera; ghara chalira haun (My house is there so I’m going home).”" },
+    { label: "The Seasons of Love", text: "I shall compare you to a Summer’s Day\nYou shine brighter than the Sun\nGiving me hope, giving me love\nYet somedays, like the June Gloom covering the Sun,\nYour brightness turns grim\nAnd I stop smiling..." }
   ];
 
   const handleKeyDown = (e) => {
@@ -37,25 +40,25 @@ export default function TypewriterStudio() {
     const element = document.createElement("a");
     const file = new Blob([typedText], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
-    element.download = "victorian_manuscript_2026.txt";
+    element.download = "manuscript_draft.txt";
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
   };
 
   return (
-    <section className="typewriter-studio-section border-t border-cream-accent">
+    <section id="studio" className="typewriter-studio-section border-t border-cream-accent">
       <div className="section-header text-center">
         <div className="ornamental-header-divider">
           <span>❧</span>
           <span className="divider-line"></span>
-          <span className="section-kicker"><Feather size={15} /> LITERARY SANDBOX</span>
+          <span className="section-kicker"><Feather size={15} /> {studioTexts.kicker || "WRITING DESK"}</span>
           <span className="divider-line"></span>
           <span>❧</span>
         </div>
-        <h2 className="section-title font-display">THE VICTORIAN TYPEWRITER STUDIO</h2>
+        <h2 className="section-title font-display">{studioTexts.title || "THE TYPEWRITER STUDIO"}</h2>
         <p className="section-desc mx-auto">
-          An interactive mechanical writing suite. Compose verses, hear authentic typewriter key strikes and carriage return chimes, and export your antique manuscript.
+          {studioTexts.description || "An interactive writing desk. Type your own words with tactile key clicks, switch ink colors, and draft your own notes."}
         </p>
       </div>
 

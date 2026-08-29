@@ -3,16 +3,16 @@ import { Sparkles, BookOpen, Compass, Feather } from 'lucide-react';
 
 export default function GothicMarqueeRibbon() {
   const items = [
-    { text: "GOTHIC ROMANTICISM", icon: "❦" },
-    { text: "THE KANTIAN SUBLIME", icon: "⚜" },
-    { text: "PRE-RAPHAELITE CADENCE", icon: "✦" },
-    { text: "ILLUMINATED VELLUM", icon: "❧" },
-    { text: "DARK ACADEMIA ARCHIVE", icon: "♦" },
-    { text: "ALGORITHMIC HERMENEUTICS", icon: "❦" },
-    { text: "VICTORIAN GHOST METAPHOR", icon: "⚜" },
-    { text: "POST-HUMAN POETICS", icon: "✦" },
-    { text: "HAUNTOLOGY & LATENT SPACE", icon: "❧" },
-    { text: "MATERIAL BIBLIOGRAPHY", icon: "♦" }
+    { text: "THE CONSTELLATION SPOON", icon: "❦" },
+    { text: "THE SEASONS OF LOVE", icon: "⚜" },
+    { text: "SUNDAR NAGAR ROOTS", icon: "✦" },
+    { text: "WE LOOK AT THE SAME MOON", icon: "❧" },
+    { text: "PARADOX OF LOVE", icon: "♦" },
+    { text: "MEET ME IN THE WOODS", icon: "❦" },
+    { text: "COME AND LAY BY MY SIDE", icon: "⚜" },
+    { text: "BATHING WITH MY LOVE", icon: "✦" },
+    { text: "LOVER'S ROCK", icon: "❧" },
+    { text: "NONE SHALL REALISE", icon: "♦" }
   ];
 
   return (

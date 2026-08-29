@@ -1,20 +1,34 @@
 import React, { useState } from 'react';
 import { usePortfolio } from '../context/PortfolioContext';
-import { Feather, ArrowUpRight, Sparkles, BookOpen, Quote, Shield, Award } from 'lucide-react';
+import { Feather, ArrowUpRight, Sparkles, BookOpen, Shield } from 'lucide-react';
 import { playTypewriterSound } from '../utils/audioSynth';
 
 export default function Hero() {
   const { data, setActiveReaderWork, setIsAdminOpen } = usePortfolio();
   const [hoveredWord, setHoveredWord] = useState(null);
 
+  const heroTexts = data.siteTexts?.hero || {};
+
   const keywords = [
-    { word: "HAUNTOLOGY", def: "The repetition of past cultural specters in digital space." },
-    { word: "SYNTACTIC MANIFOLD", def: "High-dimensional vector representation of prose rhythm." },
-    { word: "ALGORITHMIC HERMENEUTICS", def: "Critical interpretation of machine-generated literary corpora." },
-    { word: "POST-HUMAN POETICS", def: "Literature created at the boundary of human consciousness & AI." }
+    { 
+      word: heroTexts.theme1Word || "THE SPOON & NIGHT SKY", 
+      def: heroTexts.theme1Def || "Looking up at the Big Dipper on the roof in Sundar Nagar with family." 
+    },
+    { 
+      word: heroTexts.theme2Word || "SEASONS OF LOVE", 
+      def: heroTexts.theme2Def || "How love makes you hopeful like a summer morning, then breaks you apart like winter." 
+    },
+    { 
+      word: heroTexts.theme3Word || "ROOTS & MEMORIES", 
+      def: heroTexts.theme3Def || "'Ghar haaya tithe ta mera; ghara chalira haun.' Missing the home you once wished to leave." 
+    },
+    { 
+      word: heroTexts.theme4Word || "DISTANCE & THE MOON", 
+      def: heroTexts.theme4Def || "Looking at the same Moon across different cities — the quiet connection between two people." 
+    }
   ];
 
-  const featuredWork = data.works.find(w => w.featured) || data.works[0];
+  const featuredWork = (data.works && data.works.length > 0) ? (data.works.find(w => w.featured) || data.works[0]) : null;
 
   return (
     <header className="hero-section">
@@ -24,24 +38,24 @@ export default function Hero() {
         {/* Status Badge */}
         <div className="hero-badge">
           <span className="badge-ring"></span>
-          <span className="badge-text">{data.profile.statusBadge}</span>
+          <span className="badge-text">{heroTexts.statusBadge || data.profile?.statusBadge || "Original Writings"}</span>
         </div>
 
         {/* Big Editorial Title */}
         <h1 className="hero-title">
-          THE LEXICON <span className="text-gradient">2026</span>
+          {heroTexts.titleMain || "SELECTED"} <span className="text-gradient">{heroTexts.titleHighlight || "WRITINGS"}</span>
           <br />
-          <span className="hero-title-sub">AUTONOMOUS PROSE & CRITICAL THEORY</span>
+          <span className="hero-title-sub">{heroTexts.subtitle || "POETRY, STORIES & MEMOIRS"}</span>
         </h1>
 
         {/* Sub-tagline */}
         <p className="hero-tagline">
-          {data.profile.tagline}
+          {heroTexts.tagline || data.profile?.tagline || "A personal collection about love, distance, grief, and memories of home."}
         </p>
 
-        {/* Etymology Matrix Nodes */}
+        {/* Themes Pills */}
         <div className="etymology-pills">
-          <span className="pill-title"><Sparkles size={14} /> Core Inquiry Nodes:</span>
+          <span className="pill-title"><Sparkles size={14} /> {heroTexts.themesTitle || "Recurring Themes"}:</span>
           {keywords.map((k, idx) => (
             <div 
               key={idx} 
@@ -60,7 +74,7 @@ export default function Hero() {
         {/* Hover Definition Drawer */}
         {hoveredWord && (
           <div className="etymology-drawer animate-fade-in">
-            <span className="drawer-label">GLOSSARY ENTRY // {hoveredWord.word}:</span>
+            <span className="drawer-label">{hoveredWord.word}:</span>
             <p className="drawer-def">"{hoveredWord.def}"</p>
           </div>
         )}
@@ -68,7 +82,7 @@ export default function Hero() {
         {/* CTA Actions */}
         <div className="hero-actions">
           <a href="#works" className="btn-primary">
-            <BookOpen size={18} /> Explore Published Works
+            <BookOpen size={18} /> {heroTexts.btnPrimary || "Browse All Writings"}
           </a>
 
           {featuredWork && (
@@ -79,7 +93,7 @@ export default function Hero() {
                 setActiveReaderWork(featuredWork);
               }}
             >
-              <Feather size={18} /> Featured Reader Mode <ArrowUpRight size={16} />
+              <Feather size={18} /> {heroTexts.btnSecondary || "Read"}: {featuredWork.title} <ArrowUpRight size={16} />
             </button>
           )}
 
@@ -87,27 +101,27 @@ export default function Hero() {
             className="btn-ghost"
             onClick={() => setIsAdminOpen(true)}
           >
-            <Shield size={16} /> Admin Portal
+            <Shield size={16} /> {heroTexts.btnAdmin || "Archive Editor"}
           </button>
         </div>
 
         {/* Quick Stats Grid */}
         <div className="hero-stats-grid">
           <div className="stat-card">
-            <span className="stat-num">{data.profile.stats.publishedEssays}</span>
-            <span className="stat-label">Published Essays & Critiques</span>
+            <span className="stat-num">{heroTexts.stat1Num || data.works?.length || "18"}</span>
+            <span className="stat-label">{heroTexts.stat1Label || "Total Pieces"}</span>
           </div>
           <div className="stat-card">
-            <span className="stat-num">{data.profile.stats.citations}</span>
-            <span className="stat-label">Academic Citations</span>
+            <span className="stat-num">{heroTexts.stat2Num || "9"}</span>
+            <span className="stat-label">{heroTexts.stat2Label || "Poems"}</span>
           </div>
           <div className="stat-card">
-            <span className="stat-num">{data.profile.stats.booksRead2026}</span>
-            <span className="stat-label">Curated Books Read in 2026</span>
+            <span className="stat-num">{heroTexts.stat3Num || "5"}</span>
+            <span className="stat-label">{heroTexts.stat3Label || "Stories"}</span>
           </div>
           <div className="stat-card">
-            <span className="stat-num">{data.profile.stats.wordCountDrafted}</span>
-            <span className="stat-label">Words Drafted</span>
+            <span className="stat-num">{heroTexts.stat4Num || "4"}</span>
+            <span className="stat-label">{heroTexts.stat4Label || "Memoirs & Essays"}</span>
           </div>
         </div>
       </div>
